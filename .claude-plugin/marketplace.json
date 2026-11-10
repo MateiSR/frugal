@@ -1,0 +1,25 @@
+{
+  "name": "streamkit",
+  "owner": {
+    "name": "MateiSR"
+  },
+  "metadata": {
+    "description": "Personal marketplace for the streamkit warm-stream orchestration plugin.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "streamkit",
+      "source": "./",
+      "description": "Flat warm-stream orchestration skill and 5 mechanical subagent archetypes for multi-hour Claude Code milestones.",
+      "version": "0.1.0",
+      "keywords": [
+        "orchestration",
+        "subagents",
+        "worktrees",
+        "claude-code"
+      ],
+      "category": "development"
+    }
+  ]
+}
