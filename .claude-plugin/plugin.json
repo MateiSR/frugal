@@ -1,0 +1,16 @@
+{
+  "name": "streamkit",
+  "version": "0.1.0",
+  "description": "Flat warm-stream orchestration skill and 5 mechanical subagent archetypes for multi-hour Claude Code milestones.",
+  "license": "MIT",
+  "repository": "https://github.com/MateiSR/streamkit",
+  "author": {
+    "name": "MateiSR"
+  },
+  "keywords": [
+    "orchestration",
+    "subagents",
+    "worktrees",
+    "claude-code"
+  ]
+}
