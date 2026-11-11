@@ -4,8 +4,9 @@ Claude Code plugin for running a large, multi-package milestone as a flat, warm-
 
 ## What it does
 
-`/streamkit:orchestrate` runs five phases:
+`/streamkit:orchestrate` runs a bootstrap step and five phases:
 
+0. **Bootstrap** — adds local git ignores and, if the repo has no Execution Constraints, schedules a researcher to draft them.
 1. **Research** — parallel read-only `researcher` agents over disjoint slices.
 2. **Plan** — the orchestrator writes `.orchestrate/PLAN.md` with streams, packages and Done Contracts, then stops for approval (by default).
 3. **Warm streams** — each `stream-worker` takes a sequence of packages and is resumed with `SendMessage`, so it keeps its 1-hour prompt cache. Parallel worktrees only for substantial, disjoint work.
@@ -44,8 +45,12 @@ Leave `subagentPromptCacheTtl` and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` unset:
 
 ### Per-project setup
 
-- Add `templates/project-CLAUDE-snippet.md` to the repo's `CLAUDE.md` and fill in its exclusive locks, conflict-prone files, CLI wrappers and acceptance commands. The orchestrator reads this section at startup.
-- Add the lines in `templates/gitignore-snippet` to the repo's `.gitignore`.
+None required. On each run the skill:
+
+- adds `.claude/worktrees/` and `.orchestrate/` to the clone's local `.git/info/exclude` (no tracked file changes);
+- if the repo's `CLAUDE.md` has no **Execution Constraints** section, has a researcher draft one into `.orchestrate/CONSTRAINTS.md`, shows it in the plan for correction, and offers to add it to `CLAUDE.md` at the end.
+
+To set the constraints yourself instead, copy `templates/project-CLAUDE-snippet.md` into the repo's `CLAUDE.md` and fill it in. `templates/gitignore-snippet` is there if you want the ignores committed.
 
 ## Usage
 
