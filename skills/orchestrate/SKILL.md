@@ -22,9 +22,18 @@ Your context is scarce across multi-hour runs: never read full source files, raw
 
 Read only:
 1. The user's message and any plan/handoff file they point to.
-2. Any **Execution Constraints** section in the repo's `CLAUDE.md` (exclusive locks, conflict-prone files, thin CLI wrappers, vault/doc paths, acceptance commands).
+2. Any **Execution Constraints** section in the repo's `CLAUDE.md`, else `.orchestrate/CONSTRAINTS.md` if it exists (exclusive locks, conflict-prone files, thin CLI wrappers, vault/doc paths, acceptance commands).
 
 Nothing else before Phase 1.
+
+## Project Bootstrap (automatic, no user prompt)
+
+1. **Ignores.** Run once; it is local to this clone, covers every worktree, and touches no tracked file:
+   ```bash
+   x="$(git rev-parse --git-common-dir)/info/exclude"; for p in .claude/worktrees/ .orchestrate/; do grep -qxF "$p" "$x" 2>/dev/null || echo "$p" >> "$x"; done
+   ```
+2. **Missing Execution Constraints.** If neither startup source has them, add one extra `streamkit:researcher` to Phase 1 with this yardstick: exclusive locks (GPU, GUI app, single port, database, build cache); conflict-prone files (manifests, lockfiles, shared registries, binary assets); thin CLI wrappers for external or asset calls; doc/reference vault paths; exact end-to-end acceptance command(s); any paid or external calls. Write its findings to `.orchestrate/CONSTRAINTS.md`, treat them as the constraints for this run, and list them under **Decisions for the user** in Phase 2 so they can be corrected.
+3. Never edit the repo's `CLAUDE.md` yourself. In the final report, offer to add the confirmed constraints to it as an `## Execution Constraints` section.
 
 ## Agent Roster & Model Pinning
 
