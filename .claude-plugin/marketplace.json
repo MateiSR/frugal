@@ -12,7 +12,6 @@
       "name": "streamkit",
       "source": "./",
       "description": "Flat warm-stream orchestration skill and 5 mechanical subagent archetypes for multi-hour Claude Code milestones.",
-      "version": "0.1.0",
       "keywords": [
         "orchestration",
         "subagents",
