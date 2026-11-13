@@ -10,7 +10,8 @@ const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 
-const DATA = path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'frugal');
+// FRUGAL_DIR lets tests and the benchmark use a throwaway state directory.
+const DATA = process.env.FRUGAL_DIR || path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'frugal');
 const LOG = path.join(DATA, 'log.jsonl');
 const RULES = path.join(__dirname, '..', 'rules', 'frugal.md');
 const REMINDER = 'Frugal mode active: minimum code that needs to exist, fewest clear words. Keep code, identifiers, commands and safety-critical paths exact.';
@@ -42,6 +43,8 @@ function effective(input) {
   return s.session || s.project || s.global || 'on';
 }
 function rulesText() {
+  // FRUGAL_RULES swaps in another rules file verbatim, for benchmarking variants.
+  if (process.env.FRUGAL_RULES) return read(process.env.FRUGAL_RULES);
   const rules = read(RULES);
   return rules ? 'FRUGAL MODE ACTIVE. Apply these rules reflexively.\n\n' + rules : '';
 }
@@ -81,7 +84,7 @@ function prompt(input) {
   const mode = effective(input);
   const s = loadSession(input.session_id);
   let text = '';
-  if (mode === 'on') text = s.announced === 'on' ? REMINDER : rulesText();
+  if (mode === 'on') text = s.announced !== 'on' ? rulesText() : process.env.FRUGAL_REMINDER === 'off' ? '' : REMINDER;
   else if (s.announced === 'on') text = OFF_NOTICE;
   if (s.announced !== mode) { s.announced = mode; saveSession(input.session_id, s); }
   log(input, 'prompt', { mode, chars: text.length });
