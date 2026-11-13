@@ -50,3 +50,24 @@ Minimum Claude Code version for the plugin as a whole: **v2.1.296**.
 
 - `claude plugin update <plugin>@<marketplace>` is shell-only; there is no `/plugin update` inside a session.
 - `/reload-plugins` applies changed plugins to a running session.
+
+## Hooks
+
+Source: [hooks reference](https://code.claude.com/docs/en/hooks).
+
+- Plugin hooks are auto-loaded from `hooks/hooks.json`, which must wrap the event map in `{"hooks": {...}}`; without the wrapper the file fails to load.
+- Hook commands get `CLAUDE_PLUGIN_ROOT` (changes on every update; never write state there), `CLAUDE_PLUGIN_DATA` and `CLAUDE_PROJECT_DIR`. These are not set in the Bash tool's environment.
+- Common stdin fields: `session_id`, `transcript_path`, `cwd`, `hook_event_name`.
+- `SessionStart`: `source` is `startup`, `resume`, `clear`, `compact` or `fork`, and is also the matcher value. Context via plain stdout or `hookSpecificOutput.additionalContext`.
+- `SubagentStart`: stdin has `agent_id` and `agent_type`; the matcher is a regex on the agent type. Context must use the JSON `hookSpecificOutput.additionalContext` form. It cannot block the subagent.
+- `UserPromptSubmit`: stdin has `prompt`, the line as typed (a slash command is not expanded). `{"decision": "block", "reason": "..."}` stops the prompt and shows the reason to the user; a blocked slash command does not run.
+- `additionalContext` is capped at 10,000 characters; larger text is saved to a file and Claude gets the path plus a 2,000-character preview.
+- `PreCompact` and `PostCompact` exist but cannot inject context; `SessionStart` with `compact` is the way to re-inject.
+- No hook input carries token usage, apart from narrow cases. The transcript JSONL format is not documented.
+- A plugin cannot contribute a statusline; only the user's `settings.json` `statusLine` can.
+
+## Skills in plugins
+
+- Invoked as `/<plugin>:<skill>`; the bare `/<skill>` also works unless another command uses that name.
+- `disable-model-invocation: true` keeps a skill for the user's explicit use.
+- Substituted in skill content: `$ARGUMENTS`, `${CLAUDE_SESSION_ID}`, `${CLAUDE_SKILL_DIR}`, `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`, `${CLAUDE_PROJECT_DIR}`.

@@ -34,7 +34,7 @@ Only `stream-worker` sets a cache TTL. The others use the default, because they 
 - **Two-attempt debug circuit breaker.** Routine bugs are fixed inline. A second failed attempt on the same bug hands off to `debugger`.
 - **Confidence-gated review.** The reviewer reports blockers only at confidence `>= 75`, so acceptance does not loop on nits.
 - **No synthesis agent.** The orchestrator reads the short research reports directly; a middleman would lose detail.
-- **Efficiency rules live outside the plugin.** Plugins cannot ship a `CLAUDE.md`, and rules inside the skill would reach only the orchestrator. `templates/CLAUDE.md` is copied to the user's global config so workers see it too.
+- **Efficiency rules come from hooks, not from this skill.** Rules inside the skill would reach only the orchestrator. The `SubagentStart` hook gives them to every worker; see `docs/frugal-mode.md`.
 
 ## Project bootstrap
 
