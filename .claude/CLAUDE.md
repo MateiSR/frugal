@@ -1,6 +1,11 @@
-# streamkit
+# frugal
 
-Claude Code plugin and single-repo marketplace. One skill (`/streamkit:orchestrate`) plus five subagents. Everything shipped is Markdown and JSON; there is no build step and no code.
+Claude Code plugin and single-repo marketplace with two parts:
+
+1. **Frugal mode** — hooks that inject token-saving rules into every session and subagent, plus the `/frugal` toggle and stats.
+2. **Orchestration** — the `/frugal:orchestrate` skill and five subagents.
+
+The only code is `hooks/frugal.js` (Node, no dependencies, no build step). Everything else is Markdown and JSON.
 
 This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin root is not loaded for plugin users and makes `claude plugin validate` warn.
 
@@ -8,15 +13,20 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 
 - `.claude-plugin/plugin.json` — plugin manifest; the only place `version` is set.
 - `.claude-plugin/marketplace.json` — marketplace manifest, plugin `source` is `./`.
+- `rules/frugal.md` — the rules text the hooks inject. Must stay under 9,900 characters.
+- `hooks/hooks.json` — registers `SessionStart`, `SubagentStart`, `UserPromptSubmit`.
+- `hooks/frugal.js` — all three hooks, the `/frugal` command and stats.
+- `skills/frugal/SKILL.md` — fallback for `/frugal` if the hook did not run.
 - `skills/orchestrate/SKILL.md` — the orchestrator's instructions.
 - `agents/*.md` — `stream-worker`, `researcher`, `debugger`, `visual-verifier`, `reviewer`.
-- `templates/` — files users copy by hand (global `CLAUDE.md`, settings snippet, project snippet).
+- `templates/` — optional files users copy by hand.
 - `docs/` — reference for people and agents working on this repo; not loaded by the plugin.
 
 ## Reference docs (read when relevant, not up front)
 
-- `docs/architecture.md` — phases, topology, why each agent is configured the way it is. Read before changing the skill or any agent's role, model or tools.
-- `docs/frontmatter-reference.md` — which frontmatter and settings keys are verified against the official docs, with minimum versions. Read before adding or changing a key.
+- `docs/frugal-mode.md` — hook flow, state files, the `/frugal` command, how stats are computed. Read before touching `hooks/` or `rules/`.
+- `docs/architecture.md` — orchestration phases, topology, why each agent is configured the way it is. Read before changing the orchestrate skill or an agent.
+- `docs/frontmatter-reference.md` — frontmatter, hook and settings facts verified against the official docs, with minimum versions. Read before adding or changing a key or a hook.
 - `docs/development.md` — how to test a change and cut a release.
 
 ## Commands
@@ -26,16 +36,19 @@ claude plugin validate .          # must end with "Validation passed"
 claude --plugin-dir .             # interactive session with the working copy
 ```
 
-Headless load check, release steps and the install round-trip are in `docs/development.md`.
+The hook test script, headless checks and release steps are in `docs/development.md`.
 
 ## Rules
 
-- Refer to agents by their namespaced type, `streamkit:<agent>`, everywhere in the skill and agent bodies. Frontmatter `name` stays bare (no `:`).
+- A hook must never break a session: `hooks/frugal.js` exits 0 with no output on any error. Keep it dependency-free.
+- Do not put tokens into context that the user did not ask for. `/frugal` replies and stats go out through a blocked prompt, never through `additionalContext`.
+- Stats report measured numbers. Never add an assumed savings percentage or a benchmark constant.
+- `rules/frugal.md` is adapted from Honey for Devs (MIT). Keep `NOTICE` accurate if it changes substantially.
+- Refer to agents by their namespaced type, `frugal:<agent>`, in skill and agent bodies. Frontmatter `name` stays bare (no `:`).
 - Do not add `hooks`, `mcpServers`, `permissionMode` or `initialPrompt` to agent frontmatter: plugin agents silently ignore them.
-- Do not invent frontmatter or settings keys. Check the official Claude Code docs first, then record the key in `docs/frontmatter-reference.md`.
-- Every agent keeps a hard reply-line cap and a fixed reply format. The orchestrator's context depends on it.
-- Keep the topology flat: workers spawn only leaf agents, never another worker or reviewer.
-- `templates/CLAUDE.md` is adapted from Honey for Devs (MIT). Keep `NOTICE` accurate if that file changes substantially.
+- Do not invent frontmatter, hook or settings keys. Check the official Claude Code docs first, then record the fact in `docs/frontmatter-reference.md`.
+- Every agent keeps a hard reply-line cap and a fixed reply format.
+- Keep the orchestration topology flat: workers spawn only leaf agents.
 - Commits are small and single-purpose. Bump `version` in `plugin.json` for any change users should receive.
 
 ## Keeping this file and `docs/` current
@@ -44,9 +57,11 @@ Update them in the same commit as the change that makes them stale:
 
 | If you change | Also update |
 | :--- | :--- |
-| A phase, option or rule in `skills/orchestrate/SKILL.md` | `docs/architecture.md`, README "What it does" / "Usage" |
-| An agent's model, effort, tools, TTL or role | `docs/architecture.md`, README agents table, the roster table in `SKILL.md` |
-| Any frontmatter or settings key | `docs/frontmatter-reference.md`, README minimum version |
+| `hooks/frugal.js` or `hooks/hooks.json` (injection, state, commands, stats) | `docs/frugal-mode.md`, README "Frugal mode" |
+| `rules/frugal.md` | README "The rules"; check the size limit |
+| A phase, option or rule in `skills/orchestrate/SKILL.md` | `docs/architecture.md`, README "Orchestration" |
+| An agent's model, effort, tools, TTL or role | `docs/architecture.md`, README agents table, the roster table in the orchestrate skill |
+| Any frontmatter, hook or settings key | `docs/frontmatter-reference.md`, README minimum version |
 | Files added, moved or removed | "Layout" above |
 | Install, test or release steps | `docs/development.md`, README |
 
