@@ -1,16 +1,18 @@
 {
-  "name": "streamkit",
-  "version": "0.2.0",
-  "description": "Flat warm-stream orchestration skill and 5 mechanical subagent archetypes for multi-hour Claude Code milestones.",
+  "name": "frugal",
+  "version": "0.3.0",
+  "description": "Frugal mode for Claude Code: always-on rules for less code and less prose in every session and subagent, a /frugal toggle with measured token stats, and a warm-stream orchestration skill with five pinned subagents.",
   "license": "MIT",
-  "repository": "https://github.com/MateiSR/streamkit",
+  "repository": "https://github.com/MateiSR/frugal",
   "author": {
     "name": "MateiSR"
   },
   "keywords": [
+    "token-saving",
+    "efficiency",
+    "hooks",
     "orchestration",
     "subagents",
-    "worktrees",
     "claude-code"
   ]
 }

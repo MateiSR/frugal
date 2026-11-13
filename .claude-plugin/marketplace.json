@@ -1,21 +1,23 @@
 {
-  "name": "streamkit",
+  "name": "frugal",
   "owner": {
     "name": "MateiSR"
   },
   "metadata": {
-    "description": "Personal marketplace for the streamkit warm-stream orchestration plugin.",
+    "description": "Marketplace for the frugal token-saving plugin.",
     "version": "0.1.0"
   },
   "plugins": [
     {
-      "name": "streamkit",
+      "name": "frugal",
       "source": "./",
-      "description": "Flat warm-stream orchestration skill and 5 mechanical subagent archetypes for multi-hour Claude Code milestones.",
+      "description": "Frugal mode for Claude Code: always-on rules for less code and less prose in every session and subagent, a /frugal toggle with measured token stats, and a warm-stream orchestration skill with five pinned subagents.",
       "keywords": [
+        "token-saving",
+        "efficiency",
+        "hooks",
         "orchestration",
         "subagents",
-        "worktrees",
         "claude-code"
       ],
       "category": "development"

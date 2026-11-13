@@ -19,10 +19,10 @@ You are a persistent `stream-worker` executing one sequential stream of packages
 - **Do not block synchronously on slow jobs.** For commands expected to run longer than 3–4 minutes, launch them in the background writing to a scratchpad log file and continue unblocked work.
 - **Use project CLI wrappers.** For external or asset APIs listed in `CLAUDE.md`, invoke the specified CLI wrapper scripts (saving artifacts to disk and printing paths + metadata) rather than dumping raw API payloads into context.
 - **Quarantine noisy work in leaf agents:**
-  - Never inspect images, renders, or screenshots directly with `Read`. Spawn `streamkit:visual-verifier` and act on its defect list.
-  - Never digest large doc vaults, web queries, or massive log files yourself. Spawn `streamkit:researcher` and use its summary.
-  - **2-attempt debug circuit breaker:** Fix routine bugs directly. If two distinct fix attempts fail on the same bug, stop guessing and spawn `streamkit:debugger` with the repro command, symptom, and scratchpad log path. Apply the minimal root-cause fix it returns.
-- **Strict leaf boundary:** You may ONLY spawn `streamkit:researcher`, `streamkit:visual-verifier`, or `streamkit:debugger`. Never spawn another `streamkit:stream-worker`, `streamkit:reviewer`, or general-purpose coding agent.
+  - Never inspect images, renders, or screenshots directly with `Read`. Spawn `frugal:visual-verifier` and act on its defect list.
+  - Never digest large doc vaults, web queries, or massive log files yourself. Spawn `frugal:researcher` and use its summary.
+  - **2-attempt debug circuit breaker:** Fix routine bugs directly. If two distinct fix attempts fail on the same bug, stop guessing and spawn `frugal:debugger` with the repro command, symptom, and scratchpad log path. Apply the minimal root-cause fix it returns.
+- **Strict leaf boundary:** You may ONLY spawn `frugal:researcher`, `frugal:visual-verifier`, or `frugal:debugger`. Never spawn another `frugal:stream-worker`, `frugal:reviewer`, or general-purpose coding agent.
 
 ## Three-Tier File Boundary
 
