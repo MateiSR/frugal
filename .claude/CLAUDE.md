@@ -19,6 +19,7 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 - `skills/frugal/SKILL.md` — fallback for `/frugal` if the hook did not run.
 - `skills/orchestrate/SKILL.md` — the orchestrator's instructions.
 - `agents/*.md` — `stream-worker`, `researcher`, `debugger`, `visual-verifier`, `reviewer`.
+- `bench/` — on-versus-off benchmark: `tasks.js`, `run.js`, `report.js`, `variants/`, committed `results/<stamp>/`.
 - `templates/` — optional files users copy by hand.
 - `docs/` — reference for people and agents working on this repo; not loaded by the plugin.
 
@@ -42,6 +43,7 @@ The hook test script, headless checks and release steps are in `docs/development
 
 - A hook must never break a session: `hooks/frugal.js` exits 0 with no output on any error. Keep it dependency-free.
 - Do not put tokens into context that the user did not ask for. `/frugal` replies and stats go out through a blocked prompt, never through `additionalContext`.
+- Change the rules or the injection only with a benchmark run behind it, and quote only numbers from a committed stamp in `bench/results/`.
 - Stats report measured numbers. Never add an assumed savings percentage or a benchmark constant.
 - `rules/frugal.md` is adapted from Honey for Devs (MIT). Keep `NOTICE` accurate if it changes substantially.
 - Refer to agents by their namespaced type, `frugal:<agent>`, in skill and agent bodies. Frontmatter `name` stays bare (no `:`).
@@ -63,6 +65,7 @@ Update them in the same commit as the change that makes them stale:
 | An agent's model, effort, tools, TTL or role | `docs/architecture.md`, README agents table, the roster table in the orchestrate skill |
 | Any frontmatter, hook or settings key | `docs/frontmatter-reference.md`, README minimum version |
 | Files added, moved or removed | "Layout" above |
+| `bench/` tasks, arms or method | `docs/development.md` "Benchmark"; re-run before quoting numbers |
 | Install, test or release steps | `docs/development.md`, README |
 
 Before finishing a change, re-read the row that applies and confirm the listed files agree with the new behaviour.
