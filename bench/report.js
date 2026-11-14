@@ -61,7 +61,7 @@ for (const a of arms) {
   const cols = METRICS.map(([m]) => {
     const ds = tasks.map((t) => change(t, a, m)).filter(Number.isFinite);
     const p = wilcoxon(ds);
-    return `${pct(median(ds))}${p == null ? ' —' : p < 0.05 ? ` (p=${p.toFixed(3)})` : ' (ns)'}`;
+    return `${pct(median(ds))}${p == null ? ' —' : p < 0.001 ? ' (p<0.001)' : p < 0.05 ? ` (p=${p.toFixed(3)})` : ' (ns)'}`;
   });
   L.push(`| ${a} | ${cols.join(' | ')} | ${passed}/${total} |`);
 }
