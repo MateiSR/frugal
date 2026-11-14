@@ -72,6 +72,26 @@ Frugal stats · this session
 
 State and the log live in `~/.claude/frugal/` and are left in place if you uninstall.
 
+## Benchmark
+
+156 real headless Claude Code sessions on Sonnet: 13 small tasks (code writing, bug fixes, explanations, a review) × 4 arms × 3 runs, each in a fresh workspace with no user settings. Median change per task against default Claude Code:
+
+| Arm | Output tokens | Session cost | Time | Checks passed |
+| :--- | ---: | ---: | ---: | ---: |
+| Default Claude Code | baseline | baseline | baseline | 39/39 |
+| One line: "Be concise." | −10% | −3% | −11% | 39/39 |
+| frugal, full rules (shipped) | −18% | **+48%** | −18% (ns) | 39/39 |
+| frugal, short rules, no reminder | −31% | −4% (ns) | −21% | 39/39 |
+
+What this says, plainly:
+
+- On short, single-prompt tasks the full rules cost more than they save. They add about 2,600 input tokens per session, and output is a small share of the bill.
+- The short variant (`bench/variants/lean.md`, about 250 tokens) cuts more output than the full rules and is cost-neutral.
+- Every arm passed every check, so these tasks are too easy to show a quality difference in either direction.
+- Not measured: long multi-turn sessions, where a fixed overhead is spread over more work, and other models.
+
+Full report, raw results and method: [`bench/results/2026-11-14-sonnet/report.md`](bench/results/2026-11-14-sonnet/report.md). Reproduce with `node bench/run.js --stamp <name>` (see [`docs/development.md`](docs/development.md)).
+
 ## Orchestration
 
 ```text
