@@ -2,7 +2,7 @@
 // On-versus-off benchmark for frugal mode, using real headless Claude Code sessions.
 //   node bench/run.js --selftest                      free: check every test against its reference
 //   node bench/run.js --stamp NAME [--model sonnet] [--runs 3] [--workers 4]
-//                     [--arms off,terse,on,lean] [--tasks id,id] [--api-key]
+//                     [--arms off,terse,on,full] [--tasks id,id] [--api-key]
 // Each cell = one task x one arm x one run, in a fresh empty workspace.
 // Arms differ by exactly one thing; user settings, rules, plugins and MCP servers are excluded.
 const fs = require('fs');
@@ -15,10 +15,10 @@ const ROOT = path.join(__dirname, '..');
 const ARMS = {
   off: [],                                              // default Claude Code
   terse: ['--append-system-prompt', 'Be concise.'],     // one-line control
-  on: ['--plugin-dir', ROOT],                           // frugal mode as shipped
-  lean: ['--plugin-dir', ROOT],                         // frugal with the short rules variant and no per-prompt reminder
+  on: ['--plugin-dir', ROOT],                           // frugal as shipped
+  full: ['--plugin-dir', ROOT],                         // frugal with the long rules it shipped before v0.4
 };
-const ARM_ENV = { lean: { FRUGAL_RULES: path.join(__dirname, 'variants', 'lean.md'), FRUGAL_REMINDER: 'off' } };
+const ARM_ENV = { full: { FRUGAL_RULES: path.join(__dirname, 'variants', 'full.md') } };
 const TIMEOUT_MS = 300000;
 
 const arg = (name, fallback) => { const i = process.argv.indexOf('--' + name); return i < 0 ? fallback : process.argv[i + 1]; };
@@ -107,7 +107,7 @@ async function main() {
   if (fs.existsSync(path.join(out, 'results.json'))) { console.error(`${out} already has results; pick a new --stamp`); process.exit(1); }
   const model = arg('model', 'sonnet');
   const runs = Number(arg('runs', 3));
-  const arms = arg('arms', 'off,terse,on,lean').split(',');
+  const arms = arg('arms', 'off,terse,on,full').split(',');
   const only = arg('tasks');
   const tasks = TASKS.filter((t) => !only || only.split(',').includes(t.id));
   const env = { ...process.env };

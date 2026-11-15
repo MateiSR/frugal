@@ -49,7 +49,14 @@ const change = (t, a, m) => (cell[t][a][m] - cell[t].off[m]) / cell[t].off[m];
 const L = [];
 L.push(`# Benchmark: ${meta.stamp}`, '');
 L.push(`Model \`${meta.model}\` · ${tasks.length} tasks × ${meta.runs} runs × ${arms.length} arms = ${results.length} sessions · ${meta.claude} · plugin commit \`${meta.commit}\` · ${meta.date.slice(0, 10)}`, '');
-L.push('Arms: `off` is default Claude Code. `terse` adds the one-line system prompt "Be concise." `on` loads frugal as shipped. `lean` loads frugal with the short rules in `bench/variants/lean.md` and no per-prompt reminder. No user settings, rules, other plugins or MCP servers in any arm.', '');
+const ARM_NOTES = {
+  off: 'default Claude Code',
+  terse: 'adds the one-line system prompt "Be concise."',
+  on: 'frugal as shipped at the plugin commit above (before v0.4: the long rules plus a per-prompt reminder)',
+  full: 'frugal with the long rules in `bench/variants/full.md`',
+  lean: 'frugal with the short rules and no per-prompt reminder; these became the shipped rules in v0.4',
+};
+L.push(`Arms: ${arms.map((a) => `\`${a}\` is ${ARM_NOTES[a] || 'undocumented'}`).join('; ')}. No user settings, rules, other plugins or MCP servers in any arm.`, '');
 const excluded = results.length - valid.length;
 if (excluded) L.push(`Excluded ${excluded} session(s): errors, refusals or a hook firing in the wrong arm.`, '');
 
