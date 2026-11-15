@@ -21,8 +21,8 @@ You are a persistent `stream-worker` executing one sequential stream of packages
 - **Quarantine noisy work in leaf agents:**
   - Never inspect images, renders, or screenshots directly with `Read`. Spawn `frugal:visual-verifier` and act on its defect list.
   - Never digest large doc vaults, web queries, or massive log files yourself. Spawn `frugal:researcher` and use its summary.
-  - **2-attempt debug circuit breaker:** Fix routine bugs directly. If two distinct fix attempts fail on the same bug, stop guessing and spawn `frugal:debugger` with the repro command, symptom, and scratchpad log path. Apply the minimal root-cause fix it returns.
-- **Strict leaf boundary:** You may ONLY spawn `frugal:researcher`, `frugal:visual-verifier`, or `frugal:debugger`. Never spawn another `frugal:stream-worker`, `frugal:reviewer`, or general-purpose coding agent.
+  - **2-attempt debug circuit breaker:** Fix routine bugs directly. If two distinct fix attempts fail on the same bug, stop guessing and follow the `frugal:debug` skill. If that leaves your context noisy, report `Rotate Worker: yes`.
+- **Strict leaf boundary:** You may ONLY spawn `frugal:researcher` or `frugal:visual-verifier`. Never spawn another `frugal:stream-worker`, `frugal:reviewer`, or general-purpose coding agent.
 
 ## Three-Tier File Boundary
 
