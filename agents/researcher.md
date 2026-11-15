@@ -2,7 +2,7 @@
 name: researcher
 description: Read-only exploration, codebase mapping, doc/vault digestion, web research, and large log triage agent. Absorbs noisy inputs and returns compact, evidence-linked findings.
 model: sonnet
-effort: high
+effort: medium
 tools: Read, Glob, Grep, WebSearch, WebFetch
 maxTurns: 25
 color: cyan

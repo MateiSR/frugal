@@ -2,7 +2,7 @@
 name: visual-verifier
 description: Disposable single-turn visual inspector for UI screenshots, renders, charts, PDFs, and generated images. Keeps image tokens out of long-running coding workers.
 model: opus
-effort: high
+effort: medium
 tools: Read, Glob
 omitClaudeMd: true
 maxTurns: 6
