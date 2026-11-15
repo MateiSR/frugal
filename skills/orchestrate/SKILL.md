@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Run a large multi-package milestone as a flat, warm-stream orchestrator. Plans directly from parallel research, runs warm sequential coding streams via SendMessage, fans out parallel worktrees only for substantial disjoint work, quarantines bulky I/O, debug loops, and visual checks in leaf agents, and runs an independent acceptance review. Use when the user says "orchestrate", "act as the orchestrator", or invokes /frugal:orchestrate. Not for small tasks one agent can finish inline.
+description: Run a large multi-package milestone as an orchestrator that plans, delegates coding to warm worker subagents and runs an independent acceptance review. Use when the user says "orchestrate" or invokes /frugal:orchestrate. Not for tasks one agent can finish inline.
 argument-hint: "[task] [models=all|opus,sonnet,haiku,fable] [top=few|none|free] [stops=plan|each|end] [commits=package|none]"
 ---
 
@@ -37,19 +37,18 @@ Nothing else before Phase 1.
 
 ## Agent Roster & Model Pinning
 
-Use only these 5 plugin-namespaced agents for orchestration work. Always pass `model` explicitly whenever overriding an agent's default so a Fable or Opus `high` main session never leaks its model down by inheritance.
+Use only these 4 plugin-namespaced agents for orchestration work. Always pass `model` explicitly whenever overriding an agent's default so a Fable or Opus `high` main session never leaks its model down by inheritance.
 
 | `subagent_type` | Default Model / Effort | Cache TTL | Role & Placement |
 | :--- | :--- | :--- | :--- |
-| `frugal:researcher` | `sonnet` / `high` (override `haiku` for mechanical locates; `opus` only for deeply tangled architecture) | `5m` | Read-only codebase/vault/web/log sweeps. Run in the **main checkout** (no worktree) so parallel calls share a cached prefix. |
+| `frugal:researcher` | `sonnet` / `medium` (override `haiku` for mechanical locates; `opus` only for deeply tangled architecture) | `5m` | Read-only codebase/vault/web/log sweeps. Run in the **main checkout** (no worktree) so parallel calls share a cached prefix. |
 | `frugal:stream-worker` | `opus` / `high` (override `medium` for mechanical chains) | `1h` | Warm implementation worker for a sequential stream of packages. Pass `isolation: "worktree"` only for parallel disjoint streams; run single-owner or exclusive-lock streams in the main checkout. |
-| `frugal:debugger` | `opus` / `high` | `5m` | Disposable read-only + `Bash` root-cause investigator. **Gated:** invoke only after a worker fails twice on the same bug so dead-end traces do not poison its 1h context. |
-| `frugal:visual-verifier` | `opus` / `high` | `5m` | Disposable image/render/screenshot/UI inspector (`omitClaudeMd: true`). |
+| `frugal:visual-verifier` | `opus` / `medium` | `5m` | Disposable image/render/screenshot/UI inspector (`omitClaudeMd: true`). |
 | `frugal:reviewer` | `fable` / `medium` (override `effort: "high"` on high-risk or heavily merged milestones; `opus`/`high` if `top=none`) | `5m` | Independent read-only + `Bash` Phase 5 E2E acceptance and diff auditor in the main checkout. |
 
 ## Topology & Worktree Rules
 
-- **Flat topology, no sub-orchestrators.** Never instruct a `frugal:stream-worker` to spawn another coder or reviewer. Workers may only spawn leaf agents (`frugal:researcher`, `frugal:visual-verifier`, and gated `frugal:debugger`).
+- **Flat topology, no sub-orchestrators.** Never instruct a `frugal:stream-worker` to spawn another coder or reviewer. Workers may only spawn leaf agents (`frugal:researcher`, `frugal:visual-verifier`). A bug that survives two fix attempts is handled in the worker with the `frugal:debug` skill, not with another agent.
 - **Minimum-weight worktree rule (target 2–5, hard cap 16).** Create a parallel `isolation: "worktree"` stream only when a slice has substantial independent work (multiple packages or ~15+ minutes of isolated execution) over disjoint text files. Do not over-shard small cleanups into separate cold worktrees—group them into one sequential stream. Keep total concurrent subagents under 16 to stay below the 20-subagent ceiling.
 - **Exclusive locks & conflict-prone files.** Group packages that share conflict-prone manifests/registries, binary assets, or an exclusive lock (GPU, GUI app, single port, database, build cache) into **one sequential stream** rather than parallel worktrees.
 - **Separate long-blocking jobs.** Do not block a coding stream synchronously on slow renders, builds, or batch API jobs; either isolate them into their own stream or have the worker launch them in the background with log files.
