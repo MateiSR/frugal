@@ -11,7 +11,7 @@
     {
       "name": "frugal",
       "source": "./",
-      "description": "Frugal mode for Claude Code: always-on rules for less code and less prose in every session and subagent, a /frugal toggle with measured token stats, and a warm-stream orchestration skill with five pinned subagents.",
+      "description": "Frugal mode for Claude Code: a short always-on rule set for less code and less prose in every session and subagent, a /frugal toggle with measured token stats, a committed on-versus-off benchmark, and an orchestration skill.",
       "keywords": [
         "token-saving",
         "efficiency",
