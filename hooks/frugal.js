@@ -2,7 +2,7 @@
 // Frugal mode: one script for all three hooks plus the /frugal command.
 //   frugal.js session   SessionStart hook: inject the rules
 //   frugal.js subagent  SubagentStart hook: inject the rules into a subagent
-//   frugal.js prompt    UserPromptSubmit hook: handle /frugal, else remind
+//   frugal.js prompt    UserPromptSubmit hook: handle /frugal, announce a mode switch
 //   frugal.js cli ...   same commands as /frugal, for a terminal or the fallback skill
 // Hooks must never break a session: every failure exits 0 with no output.
 const fs = require('fs');
@@ -14,10 +14,9 @@ const crypto = require('crypto');
 const DATA = process.env.FRUGAL_DIR || path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'frugal');
 const LOG = path.join(DATA, 'log.jsonl');
 const RULES = path.join(__dirname, '..', 'rules', 'frugal.md');
-const REMINDER = 'Frugal mode active: minimum code that needs to exist, fewest clear words. Keep code, identifiers, commands and safety-critical paths exact.';
-const OFF_NOTICE = 'FRUGAL MODE OFF. Disregard the frugal mode rules given earlier in this conversation and respond normally.';
-// Agents that never write code or prose for the user, so the rules are wasted on them.
-const SKIP_AGENTS = /(^|:)visual-verifier$/;
+const OFF_NOTICE = 'Frugal mode is now off. Disregard the earlier instructions to write the least code and reply briefly, and respond normally.';
+// Agents that only locate, plan or look, so the rules are wasted on them.
+const SKIP_AGENTS = /^(Explore|Plan|web-fetch|statusline-setup|claude-code-guide)$|(^|:)visual-verifier$/;
 const USAGE = 'Usage: /frugal [status] | on|off [session|project|global] | stats [all]';
 
 const read = (f) => { try { return fs.readFileSync(f, 'utf8').trim(); } catch { return ''; } };
@@ -43,10 +42,8 @@ function effective(input) {
   return s.session || s.project || s.global || 'on';
 }
 function rulesText() {
-  // FRUGAL_RULES swaps in another rules file verbatim, for benchmarking variants.
-  if (process.env.FRUGAL_RULES) return read(process.env.FRUGAL_RULES);
-  const rules = read(RULES);
-  return rules ? 'FRUGAL MODE ACTIVE. Apply these rules reflexively.\n\n' + rules : '';
+  // FRUGAL_RULES swaps in another rules file, for benchmarking variants.
+  return read(process.env.FRUGAL_RULES || RULES);
 }
 function log(input, ev, extra) {
   try {
@@ -84,8 +81,8 @@ function prompt(input) {
   const mode = effective(input);
   const s = loadSession(input.session_id);
   let text = '';
-  if (mode === 'on') text = s.announced !== 'on' ? rulesText() : process.env.FRUGAL_REMINDER === 'off' ? '' : REMINDER;
-  else if (s.announced === 'on') text = OFF_NOTICE;
+  if (mode === 'on' && s.announced !== 'on') text = rulesText();
+  else if (mode === 'off' && s.announced === 'on') text = OFF_NOTICE;
   if (s.announced !== mode) { s.announced = mode; saveSession(input.session_id, s); }
   log(input, 'prompt', { mode, chars: text.length });
   if (text) emit('UserPromptSubmit', text);
@@ -158,7 +155,7 @@ function stats(input, all) {
 
   const main = zero(), subs = zero();
   const byMode = { on: zero(), off: zero() };
-  const injected = { rules: 0, subagent: 0, reminder: 0, chars: 0 };
+  const injected = { rules: 0, subagent: 0, notice: 0, chars: 0 };
   for (const sid of wanted) {
     const timeline = events.filter((e) => e.sid === sid && e.mode);
     for (const e of timeline) {
@@ -166,7 +163,7 @@ function stats(input, all) {
       injected.chars += e.chars;
       if (e.ev === 'subagent') injected.subagent++;
       else if (e.chars > 500) injected.rules++;
-      else injected.reminder++;
+      else injected.notice++;
     }
     const modeAt = (ts) => { let mode = 'on'; for (const e of timeline) { if (e.ts > ts) break; mode = e.mode; } return mode; };
     const file = transcripts.get(sid);
@@ -175,7 +172,7 @@ function stats(input, all) {
   }
 
   const lines = [all ? `Frugal stats · ${wanted.length} logged session(s)` : 'Frugal stats · this session', row('main', main), row('subagents', subs)];
-  lines.push(`  frugal added ≈${fmt(injected.chars / 4)} input tokens (rules ×${injected.rules}, subagent rules ×${injected.subagent}, reminders ×${injected.reminder}; estimated at 4 chars per token, before caching)`);
+  lines.push(`  frugal added ≈${fmt(injected.chars / 4)} input tokens (rules ×${injected.rules}, subagent rules ×${injected.subagent}, off notices ×${injected.notice}; estimated at 4 chars per token, before caching)`);
   const { on, off } = byMode;
   if (on.msgs >= 20 && off.msgs >= 20) {
     const a = on.output / on.msgs, b = off.output / off.msgs;
