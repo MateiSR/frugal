@@ -84,6 +84,10 @@ for (const t of tasks) {
   L.push(`| ${t} | ${arms.map((a) => Math.round(cell[t][a].output)).join(' | ')} | ${arms.map((a) => cell[t][a].cost_usd.toFixed(4)).join(' | ')} | ${arms.map((a) => `${cell[t][a].pass}/${cell[t][a].n}`).join(' | ')} |`);
 }
 const sum = (a, m) => tasks.reduce((s, t) => s + cell[t][a][m], 0);
+L.push('', '## Code lines per task', '', 'Median non-blank, non-comment lines the session wrote (files it added or changed, else the code blocks in its reply).', '');
+L.push(`| Task | ${arms.join(' | ')} |`, `| :--- | ${arms.map(() => '---:').join(' | ')} |`);
+for (const t of tasks) L.push(`| ${t} | ${arms.map((a) => cell[t][a].lines).join(' | ')} |`);
+L.push(`| Total | ${arms.map((a) => sum(a, 'lines')).join(' | ')} |`);
 L.push('', '## Input overhead', '', 'Median uncached input tokens per session (fresh input plus cache writes), summed over tasks.', '');
 L.push('| Arm | New input tokens | Against off |', '| :--- | ---: | ---: |');
 for (const a of arms) L.push(`| ${a} | ${Math.round(sum(a, 'input_new'))} | ${a === 'off' ? 'baseline' : pct((sum(a, 'input_new') - sum('off', 'input_new')) / sum('off', 'input_new'))} |`);

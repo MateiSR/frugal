@@ -46,12 +46,16 @@ The orchestration flow has no automated test. To exercise it, run `/frugal:orche
 ```bash
 node bench/run.js --selftest                      # free: every test must pass its reference solution and fail its starter
 node bench/run.js --stamp smoke --model haiku --runs 1 --tasks flatten,cache   # cheap wiring check; never quote it
+node bench/run.js --stamp <name> --model opus --screen --arms off,on,v-<variant> --dry   # free: print how many new sessions it would start
+node bench/run.js --stamp <name> --model opus --screen --arms off,on,v-<variant>         # screening: 1 run of 8 tasks per arm; never quote it
 node bench/run.js --stamp <date>-<model> --model sonnet --runs 3 --workers 6   # full run, about 15 minutes
 node bench/report.js <stamp>                      # free: re-render report.md from results.json
 ```
 
 - Runs use the Claude subscription login; `ANTHROPIC_API_KEY` is removed from the child environment unless you pass `--api-key`.
 - Arms are defined in `bench/run.js` (`ARMS`, `ARM_ENV`). To test a rules change, add a file under `bench/variants/` and an arm that points `FRUGAL_RULES` at it. The `full` arm does this for the long rules shipped before v0.4.
+- Finished sessions are cached in `bench/.cache/` (git-ignored), keyed by model, task, arm, what the arm injects (rules file and hook, or rival commit), CLI version and run number. Re-running a command reuses them, so a stopped run resumes and an edited variant costs only its own arm. Delete the directory to force fresh sessions.
+- A run that would start more than 20 new sessions stops unless you pass `--yes`. Screen variants first, then run the winner on all tasks, then 3 runs only for what ships.
 - A stamp directory is never overwritten. Commit `results.json` and `report.md`; any number in the README must come from a committed stamp.
 - The method (paired medians, exact Wilcoxon test, arm-contamination check) is described at the top of `bench/report.js` and `bench/run.js`.
 
