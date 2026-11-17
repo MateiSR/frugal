@@ -1,4 +1,4 @@
-rules/frugal.md and bench/variants/full.md are adapted from the "honey" skill of Honey for Devs
+rules/frugal.md, bench/variants/tight.md and bench/variants/full.md are adapted from the "honey" skill of Honey for Devs
 (https://github.com/Green-PT/honey-for-devs, skills/honey/SKILL.md), used under the MIT License:
 
 MIT License
@@ -22,3 +22,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Since v0.5, rules/frugal.md and bench/variants/tight.md also adapt several sentences from the
+"ponytail" skill of Ponytail (https://github.com/DietrichGebert/ponytail, skills/ponytail/SKILL.md),
+Copyright (c) 2026 DietrichGebert, used under the same MIT License text as above.
