@@ -28,10 +28,11 @@ function wilcoxon(diffs) {
   return extreme / (1 << n);
 }
 
+for (const r of results) r.lines = r.loc_all ?? r.loc; // loc_all: every code line the session wrote (stamps before v0.5 only counted the target file)
 const valid = results.filter((r) => r.ok && r.arm_ok !== false);
 const tasks = [...new Set(results.map((r) => r.task))];
 const arms = meta.arms;
-const METRICS = [['output', 'Output tokens'], ['cost_usd', 'Cost'], ['duration_ms', 'Time'], ['turns', 'Turns'], ['loc', 'Code lines added']];
+const METRICS = [['output', 'Output tokens'], ['cost_usd', 'Cost'], ['duration_ms', 'Time'], ['turns', 'Turns'], ['lines', 'Code lines written']];
 // cell[task][arm][metric] = median over runs
 const cell = {};
 for (const t of tasks) {
@@ -54,9 +55,12 @@ const ARM_NOTES = {
   terse: 'adds the one-line system prompt "Be concise."',
   on: 'frugal as shipped at the plugin commit above (before v0.4: the long rules plus a per-prompt reminder)',
   full: 'frugal with the long rules in `bench/variants/full.md`',
+  caveman: `Caveman${meta.rivals?.caveman ? ` at \`${meta.rivals.caveman}\`` : ''}, full mode`,
+  ponytail: `Ponytail${meta.rivals?.ponytail ? ` at \`${meta.rivals.ponytail}\`` : ''}, full mode`,
+  honey: `Honey${meta.rivals?.['honey-for-devs'] ? ` at \`${meta.rivals['honey-for-devs']}\`` : ''}, full mode`,
   lean: 'frugal with the short rules and no per-prompt reminder; these became the shipped rules in v0.4',
 };
-L.push(`Arms: ${arms.map((a) => `\`${a}\` is ${ARM_NOTES[a] || 'undocumented'}`).join('; ')}. No user settings, rules, other plugins or MCP servers in any arm.`, '');
+L.push(`Arms: ${arms.map((a) => `\`${a}\` is ${ARM_NOTES[a] || (a.startsWith('v-') ? `frugal with the rules in \`bench/variants/${a.slice(2)}.md\`` : 'undocumented')}`).join('; ')}. No user settings, rules, other plugins or MCP servers in any arm.`, '');
 const excluded = results.length - valid.length;
 if (excluded) L.push(`Excluded ${excluded} session(s): errors, refusals or a hook firing in the wrong arm.`, '');
 
@@ -72,7 +76,7 @@ for (const a of arms) {
   });
   L.push(`| ${a} | ${cols.join(' | ')} | ${passed}/${total} |`);
 }
-L.push('', 'Cost is Claude Code\'s own `total_cost_usd` for the whole session, so it includes the tokens frugal injects. "Checks passed" is unit tests for code tasks and required facts for explanations.', '');
+L.push('', 'Cost is Claude Code\'s own `total_cost_usd` for the whole session, so it includes the tokens frugal injects. "Checks passed" is unit tests for code tasks, required facts for explanations, and "produced code" for the open-ended `pt-` tasks. Each rival plugin is the only plugin loaded in its arm.', '');
 
 L.push('## Per task', '', 'Median output tokens, cost and checks passed per arm.', '');
 L.push(`| Task | ${arms.map((a) => `${a} out`).join(' | ')} | ${arms.map((a) => `${a} $`).join(' | ')} | ${arms.map((a) => `${a} pass`).join(' | ')} |`, `| :--- | ${arms.flatMap(() => ['---:', '---:', '---:']).join(' | ')} |`);
