@@ -8,13 +8,21 @@ How the always-on rules are delivered, switched and measured. All of it is `hook
 - A global `CLAUDE.md` works but is copied by hand, drifts from the repo and outlives an uninstall.
 - Hooks fire on every session and every subagent, and install, update and uninstall with the plugin.
 
+## The rules are short on purpose
+
+`rules/frugal.md` is about 180 words (roughly 250 tokens), plain sentences, no emphasis header.
+
+Until v0.4 the plugin shipped a 1,700-token rule set with an "ACTIVE" header and a one-line reminder on every prompt. The first benchmark (`bench/results/2026-11-14-sonnet`) showed that version cutting output by 18% while raising session cost by 48% on short tasks, and the short rules cutting output by 31% at no cost change. The long rules are kept as `bench/variants/full.md` so the comparison can be re-run.
+
+This matches Anthropic's guidance for current models: long instruction blocks and emphasis make Claude over-apply rules, and per-turn reminders are for measured problems, not style.
+
 ## Hook flow
 
 | Hook | Subcommand | Behaviour |
 | :--- | :--- | :--- |
 | `SessionStart` (matcher `startup\|resume\|clear\|compact\|fork`) | `session` | Mode on: emit the rules as `additionalContext`. Mode off: emit nothing. Records what the session was told. |
-| `SubagentStart` | `subagent` | Mode on: emit the rules, unless `agent_type` ends in `visual-verifier`. Session-start context does not reach subagents, so this is the only way they get the rules. |
-| `UserPromptSubmit` | `prompt` | If the prompt is `/frugal ...`: run the command and block the prompt with the reply. Otherwise compare the current mode with what the session was last told (see below). |
+| `SubagentStart` | `subagent` | Mode on: emit the rules, except to agents that only locate, plan or look (`Explore`, `Plan`, `web-fetch`, `statusline-setup`, `claude-code-guide`, `visual-verifier`). Session-start context does not reach subagents, so this is the only way they get the rules. |
+| `UserPromptSubmit` | `prompt` | If the prompt is `/frugal ...`: run the command and block the prompt with the reply. Otherwise announce a mode switch, if there was one. |
 
 The `compact` matcher is what restores the rules after compaction.
 
@@ -22,10 +30,12 @@ The `compact` matcher is what restores the rules after compaction.
 
 | Mode now | Session was last told | Injected |
 | :--- | :--- | :--- |
-| on | on | One-line reminder |
-| on | off or nothing | Full rules |
-| off | on | One line telling Claude to disregard the rules |
+| on | on | Nothing |
+| on | off or nothing | The rules |
+| off | on | One line telling Claude to disregard them |
 | off | off or nothing | Nothing |
+
+So in a normal session the prompt hook adds no tokens at all.
 
 Output shapes:
 
@@ -34,7 +44,7 @@ Output shapes:
 {"decision": "block", "reason": "text shown to the user"}
 ```
 
-`additionalContext` is capped at 10,000 characters by Claude Code; past that it is spilled to a file and only a preview is injected. `rules/frugal.md` plus the header must stay under the cap.
+`additionalContext` is capped at 10,000 characters by Claude Code; past that it is spilled to a file and only a preview is injected.
 
 ## State
 
@@ -51,6 +61,8 @@ Effective mode: session override, else project, else global, else `on`.
 
 `shortcut:` session files are never cleaned up; each is under 50 bytes. Add pruning if the folder ever matters.
 
+Environment overrides, for tests and the benchmark only: `FRUGAL_DIR` (state directory) and `FRUGAL_RULES` (rules file).
+
 ## `/frugal`
 
 Parsed from the raw prompt by the `UserPromptSubmit` hook (`/frugal` and `/frugal:frugal` both match). The reply is returned as a blocked prompt, so the model is not called and no tokens are spent. Claude learns about a switch on the next prompt, through the per-prompt logic above.
@@ -66,9 +78,10 @@ Source: Claude Code's session transcripts (`transcript_path` from hook input, an
 - Each main-session message is attributed to the mode in effect at its timestamp, from the log's timeline.
 - The on/off comparison is output tokens per message, shown only with at least 20 messages on each side. It is observational: the tasks differ between the two groups.
 
-There is deliberately no modelled savings figure. Caveman multiplies by a fixed 65%; Honey scales by benchmark ratios. Both produce a number without measuring the session in front of you.
+There is deliberately no modelled savings figure in `/frugal stats`. Caveman multiplies by a fixed 65%; Honey scales by benchmark ratios. Both produce a number without measuring the session in front of you. Controlled numbers come from `bench/`.
 
 ## Not done
 
 - No statusline badge. Claude Code has no way for a plugin to contribute a statusline; it would have to be wired into the user's own script.
-- No cost in dollars. That needs a price table that goes stale; the statusline's `cost.total_cost_usd` already covers it.
+- No cost in dollars in `/frugal stats`. That needs a price table that goes stale; the statusline's `cost.total_cost_usd` already covers it.
+- No hook that trims test and build output. One study measured about −3% cost for that technique with a confidence interval touching zero, and the current benchmark tasks do not run shell commands, so it cannot be tested here yet.
