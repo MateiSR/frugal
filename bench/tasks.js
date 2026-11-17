@@ -163,4 +163,32 @@ T.push({
   facts: ['inject', 'parameter|placeholder|prepared|\\?'],
 });
 
+// ---- Rival benchmarks' own tasks, so the comparison includes the tests they chose. ----
+
+// Ponytail's five single-shot prompts, verbatim (benchmarks/promptfooconfig.yaml). Open-ended:
+// graded only on producing code, and measured by how many code lines the session wrote.
+const open = (id, prompt, files) => T.push({ id, kind: 'open', prompt, files });
+open('pt-email', 'Write me a Python function that validates email addresses.');
+open('pt-debounce', 'Write a reusable debounce function in vanilla JavaScript: debounce(fn, delay) returns a debounced version of fn that delays calling it until delay ms after the last call.');
+open('pt-csv', "Write Python code that reads sales.csv and sums the 'amount' column.", { 'sales.csv': 'date,region,amount\n2026-01-03,north,120.50\n2026-01-04,south,80\n2026-01-05,north,42.25\n' });
+open('pt-countdown', 'Build me a countdown timer component in React that counts down from a given number of seconds.');
+open('pt-ratelimit', "Add rate limiting to my FastAPI endpoint so users can't spam it.", { 'main.py': 'from fastapi import FastAPI\n\napp = FastAPI()\n\n\n@app.post("/messages")\ndef send_message(text: str):\n    return {"sent": text}\n' });
+
+// Five of Honey's unit-tested Python tasks, read from the local clone (bench/tasks/<name>).
+// Only change: "put it in a single code block" becomes "put it in solution.py", because these are agent sessions.
+const fs = require('fs');
+const path = require('path');
+const i = process.argv.indexOf('--rivals');
+const honey = path.join(i < 0 ? path.join(__dirname, '..', '..', 'token-savers') : process.argv[i + 1], 'honey-for-devs', 'bench', 'tasks');
+for (const name of ['lru-cache', 'interval-merge', 'format-bytes', 'parse-pagination', 'round-half-up']) {
+  const dir = path.join(honey, name);
+  if (!fs.existsSync(dir)) continue;
+  const read = (f) => fs.readFileSync(path.join(dir, f), 'utf8');
+  T.push({
+    id: 'hn-' + name, kind: 'write', target: 'solution.py',
+    prompt: read('prompt.md').trim().replace(/Put (it|the class|the fixed version) in a single Python code block\. It will be imported as/, 'Put it in `solution.py`. It will be imported as'),
+    test: read('test.py'), reference: read('reference.py'),
+  });
+}
+
 module.exports = T;
