@@ -3,7 +3,7 @@
 Claude Code plugin and single-repo marketplace with two parts:
 
 1. **Frugal mode** — hooks that inject token-saving rules into every session and subagent, plus the `/frugal` toggle and stats.
-2. **Orchestration** — the `/frugal:orchestrate` skill and five subagents.
+2. **Orchestration** — the `/frugal:orchestrate` skill, four subagents and a `debug` skill.
 
 The only code is `hooks/frugal.js` (Node, no dependencies, no build step). Everything else is Markdown and JSON.
 
@@ -13,12 +13,13 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 
 - `.claude-plugin/plugin.json` — plugin manifest; the only place `version` is set.
 - `.claude-plugin/marketplace.json` — marketplace manifest, plugin `source` is `./`.
-- `rules/frugal.md` — the rules text the hooks inject. Must stay under 9,900 characters.
+- `rules/frugal.md` — the rules text the hooks inject. Keep it short: every token here is paid in every session and subagent.
 - `hooks/hooks.json` — registers `SessionStart`, `SubagentStart`, `UserPromptSubmit`.
 - `hooks/frugal.js` — all three hooks, the `/frugal` command and stats.
 - `skills/frugal/SKILL.md` — fallback for `/frugal` if the hook did not run.
 - `skills/orchestrate/SKILL.md` — the orchestrator's instructions.
-- `agents/*.md` — `stream-worker`, `researcher`, `debugger`, `visual-verifier`, `reviewer`.
+- `skills/debug/SKILL.md` — root-cause method for a bug that survived two fixes.
+- `agents/*.md` — `stream-worker`, `researcher`, `visual-verifier`, `reviewer`.
 - `bench/` — on-versus-off benchmark: `tasks.js`, `run.js`, `report.js`, `variants/`, committed `results/<stamp>/`.
 - `templates/` — optional files users copy by hand.
 - `docs/` — reference for people and agents working on this repo; not loaded by the plugin.
@@ -49,6 +50,8 @@ The hook test script, headless checks and release steps are in `docs/development
 - Refer to agents by their namespaced type, `frugal:<agent>`, in skill and agent bodies. Frontmatter `name` stays bare (no `:`).
 - Do not add `hooks`, `mcpServers`, `permissionMode` or `initialPrompt` to agent frontmatter: plugin agents silently ignore them.
 - Do not invent frontmatter, hook or settings keys. Check the official Claude Code docs first, then record the fact in `docs/frontmatter-reference.md`.
+- Add a subagent only for isolation of bulky output, a different model or tool set, or parallel or independent work. Otherwise write a skill.
+- Write instructions as plain sentences. No all-caps emphasis, no per-turn reminders, no "verify twice" scaffolding.
 - Every agent keeps a hard reply-line cap and a fixed reply format.
 - Keep the orchestration topology flat: workers spawn only leaf agents.
 - Commits are small and single-purpose. Bump `version` in `plugin.json` for any change users should receive.
@@ -60,7 +63,7 @@ Update them in the same commit as the change that makes them stale:
 | If you change | Also update |
 | :--- | :--- |
 | `hooks/frugal.js` or `hooks/hooks.json` (injection, state, commands, stats) | `docs/frugal-mode.md`, README "Frugal mode" |
-| `rules/frugal.md` | README "The rules"; check the size limit |
+| `rules/frugal.md` | README "The rules"; run the benchmark and update the README table |
 | A phase, option or rule in `skills/orchestrate/SKILL.md` | `docs/architecture.md`, README "Orchestration" |
 | An agent's model, effort, tools, TTL or role | `docs/architecture.md`, README agents table, the roster table in the orchestrate skill |
 | Any frontmatter, hook or settings key | `docs/frontmatter-reference.md`, README minimum version |

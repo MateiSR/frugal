@@ -13,20 +13,14 @@ Must end with `Validation passed`. The "no icon" notice is about the public plug
 Run the script directly against a throwaway state directory, so your real `~/.claude/frugal/` is untouched:
 
 ```bash
-export CLAUDE_CONFIG_DIR=$(mktemp -d)
+export FRUGAL_DIR=$(mktemp -d)
 echo '{"session_id":"s1","cwd":"/tmp/p","source":"startup"}' | node hooks/frugal.js session    # rules as JSON
-echo '{"session_id":"s1","cwd":"/tmp/p","prompt":"hello"}'   | node hooks/frugal.js prompt     # one-line reminder
+echo '{"session_id":"s1","cwd":"/tmp/p","prompt":"hello"}'   | node hooks/frugal.js prompt     # nothing
 echo '{"session_id":"s1","cwd":"/tmp/p","prompt":"/frugal off"}' | node hooks/frugal.js prompt # {"decision":"block",...}
 echo '{"session_id":"s1","cwd":"/tmp/p","prompt":"hello"}'   | node hooks/frugal.js prompt     # "disregard" notice
 echo '{"session_id":"s1","cwd":"/tmp/p","agent_type":"frugal:visual-verifier"}' | node hooks/frugal.js subagent  # nothing
 echo 'not json' | node hooks/frugal.js session; echo $?                                        # 0, no output
-unset CLAUDE_CONFIG_DIR
-```
-
-Check `rules/frugal.md` is still under the injection cap:
-
-```bash
-wc -m rules/frugal.md    # keep below 9900
+unset FRUGAL_DIR
 ```
 
 ### In a real session
@@ -43,7 +37,7 @@ claude --plugin-dir /path/to/frugal --model haiku --debug-file /tmp/frugal-debug
 grep -i 'plugin frugal\|hook' /tmp/frugal-debug.log | head
 ```
 
-Expect `Loaded 5 agents`, `Loaded 2 skills` and the hooks registering.
+Expect `Loaded 4 agents`, `Loaded 3 skills` and the hooks registering.
 
 The orchestration flow has no automated test. To exercise it, run `/frugal:orchestrate` on a small throwaway repo with `stops=each`.
 
@@ -57,7 +51,7 @@ node bench/report.js <stamp>                      # free: re-render report.md fr
 ```
 
 - Runs use the Claude subscription login; `ANTHROPIC_API_KEY` is removed from the child environment unless you pass `--api-key`.
-- Arms are defined in `bench/run.js` (`ARMS`, `ARM_ENV`). To test a rules change, add a file under `bench/variants/` and an arm that points `FRUGAL_RULES` at it.
+- Arms are defined in `bench/run.js` (`ARMS`, `ARM_ENV`). To test a rules change, add a file under `bench/variants/` and an arm that points `FRUGAL_RULES` at it. The `full` arm does this for the long rules shipped before v0.4.
 - A stamp directory is never overwritten. Commit `results.json` and `report.md`; any number in the README must come from a committed stamp.
 - The method (paired medians, exact Wilcoxon test, arm-contamination check) is described at the top of `bench/report.js` and `bench/run.js`.
 

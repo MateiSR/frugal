@@ -18,20 +18,21 @@ Run a multi-hour milestone without the main session's context filling up. The or
 | Agent | Model / effort | Notable frontmatter | Reason |
 | :--- | :--- | :--- | :--- |
 | `stream-worker` | `opus` / `high` | `experimental.cacheTtl: "1h"`, `autoCompactWindow: 250000`, no web tools | Resumed across packages, so a long cache TTL pays off; gaps between packages can exceed 5 minutes |
-| `researcher` | `sonnet` / `high` | read-only tools plus web, `maxTurns: 25` | Cheap bulk reading; parallel calls in the main checkout share a cached prefix |
-| `debugger` | `opus` / `high` | no edit tools, `maxTurns: 25` | Disposable, so dead-end hypotheses never enter the worker's long-lived context |
-| `visual-verifier` | `opus` / `high` | `Read`, `Glob` only, `omitClaudeMd: true`, `maxTurns: 6` | Image tokens stay out of workers; coding rules are irrelevant to it |
+| `researcher` | `sonnet` / `medium` | read-only tools plus web, `maxTurns: 25` | Cheap bulk reading; parallel calls in the main checkout share a cached prefix |
+| `visual-verifier` | `opus` / `medium` | `Read`, `Glob` only, `omitClaudeMd: true`, `maxTurns: 6` | Image tokens stay out of workers; coding rules are irrelevant to it |
 | `reviewer` | `fable` / `medium` | no edit tools, `maxTurns: 30` | Independent of the code's author; strongest model where a miss is most expensive |
 
 Only `stream-worker` sets a cache TTL. The others use the default, because they are single-use.
 
 ## Design decisions
 
-- **Flat topology.** Nesting is allowed by Claude Code (three layers), but sub-orchestrators multiply context and hide state. Workers may spawn only `researcher`, `visual-verifier` and, after two failed fixes, `debugger`.
+- **Flat topology.** Nesting is allowed by Claude Code (three layers), but sub-orchestrators multiply context and hide state. Workers may spawn only `researcher` and `visual-verifier`.
 - **Warm streams over fresh agents.** Coupled packages go to the same worker in sequence. Rotate after 3–4 heavy packages, on `Rotate Worker: yes`, or when the transcript is gone.
 - **Worktrees are the exception.** Only for substantial, disjoint work (target 2–5 streams, hard cap 16 concurrent subagents). Anything sharing a lock or a conflict-prone file is serialised in one stream.
 - **Three-tier file boundary.** Owned files are edited freely; unclaimed supporting files get minimal wiring edits and are declared; protected files are never edited, the delta is returned for the merge phase. This keeps workers from stalling and from colliding.
-- **Two-attempt debug circuit breaker.** Routine bugs are fixed inline. A second failed attempt on the same bug hands off to `debugger`.
+- **Two-attempt debug circuit breaker.** Routine bugs are fixed inline. After a second failed attempt the worker follows the `frugal:debug` skill. This was a `debugger` subagent until v0.4; it ran the same model with a fresh context, so it was a method rather than a different capability, and a cold start cost more than it saved.
+- **A subagent must earn its place.** Each one needs at least one of: isolating bulky output (logs, images), a different model or tool set, or parallel or independent work. Anything else is a skill.
+- **Effort is the cost control.** Only `stream-worker` runs at `high`. This follows Anthropic's guidance and has not been benchmarked here.
 - **Confidence-gated review.** The reviewer reports blockers only at confidence `>= 75`, so acceptance does not loop on nits.
 - **No synthesis agent.** The orchestrator reads the short research reports directly; a middleman would lose detail.
 - **Efficiency rules come from hooks, not from this skill.** Rules inside the skill would reach only the orchestrator. The `SubagentStart` hook gives them to every worker; see `docs/frugal-mode.md`.
