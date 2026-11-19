@@ -148,7 +148,7 @@ async function main() {
   const out = path.join(__dirname, 'results', stamp);
   if (fs.existsSync(path.join(out, 'results.json'))) { console.error(`${out} already has results; pick a new --stamp`); process.exit(1); }
   const model = arg('model', 'sonnet');
-  const runs = flag('screen') ? 1 : Number(arg('runs', 3));
+  const runs = Number(arg('runs', flag('screen') ? 1 : 3));
   const arms = arg('arms', 'off,terse,on,full').split(',');
   for (const a of arms) if (!armArgs(a)) { console.error(`unknown arm ${a}`); process.exit(1); }
   const only = arg('tasks') ? arg('tasks').split(',') : flag('screen') ? SCREEN : null;
