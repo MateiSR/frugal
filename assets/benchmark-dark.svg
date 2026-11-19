@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 250" width="1200" height="250" role="img" aria-label="Code lines written over 23 tasks: default Claude Code 409, Ponytail 290, Honey 189, frugal 160. Output tokens over 39 sessions: default 37,487, Ponytail 27,998, Honey 18,635, frugal 17,040.">
+<text x="0" y="24" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="20" font-weight="600" fill="#efefef">Code lines written</text>
+<text x="0" y="48" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#9c9c9c">total over 23 tasks, lower is better</text>
+<line x1="170" y1="64" x2="170" y2="224" stroke="#3a3a3a"/>
+<text x="158" y="89" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">Default Claude Code</text>
+<path d="M170 70h296a4 4 0 0 1 4 4v20a4 4 0 0 1 -4 4h-296z" fill="#5c5c5c"/>
+<text x="480" y="89" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">409<tspan dx="8" fill="#9c9c9c" font-weight="400"></tspan></text>
+<text x="158" y="129" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">Ponytail</text>
+<path d="M170 110h209a4 4 0 0 1 4 4v20a4 4 0 0 1 -4 4h-209z" fill="#5c5c5c"/>
+<text x="393" y="129" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">290<tspan dx="8" fill="#9c9c9c" font-weight="400">(−29%)</tspan></text>
+<text x="158" y="169" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">Honey</text>
+<path d="M170 150h135a4 4 0 0 1 4 4v20a4 4 0 0 1 -4 4h-135z" fill="#5c5c5c"/>
+<text x="319" y="169" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">189<tspan dx="8" fill="#9c9c9c" font-weight="400">(−54%)</tspan></text>
+<text x="158" y="209" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="700" fill="#efefef">frugal</text>
+<path d="M170 190h113a4 4 0 0 1 4 4v20a4 4 0 0 1 -4 4h-113z" fill="#338ced"/>
+<text x="297" y="209" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="700" fill="#efefef">160<tspan dx="8" fill="#9c9c9c" font-weight="400">(−61%)</tspan></text>
+<text x="620" y="24" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="20" font-weight="600" fill="#efefef">Output tokens</text>
+<text x="620" y="48" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="15" fill="#9c9c9c">total over 39 sessions, lower is better</text>
+<line x1="790" y1="64" x2="790" y2="224" stroke="#3a3a3a"/>
+<text x="778" y="89" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">Default Claude Code</text>
+<path d="M790 70h296a4 4 0 0 1 4 4v20a4 4 0 0 1 -4 4h-296z" fill="#5c5c5c"/>
+<text x="1100" y="89" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">37,487<tspan dx="8" fill="#9c9c9c" font-weight="400"></tspan></text>
+<text x="778" y="129" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">Ponytail</text>
+<path d="M790 110h220a4 4 0 0 1 4 4v20a4 4 0 0 1 -4 4h-220z" fill="#5c5c5c"/>
+<text x="1024" y="129" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">27,998<tspan dx="8" fill="#9c9c9c" font-weight="400">(−25%)</tspan></text>
+<text x="778" y="169" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">Honey</text>
+<path d="M790 150h145a4 4 0 0 1 4 4v20a4 4 0 0 1 -4 4h-145z" fill="#5c5c5c"/>
+<text x="949" y="169" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="400" fill="#efefef">18,635<tspan dx="8" fill="#9c9c9c" font-weight="400">(−50%)</tspan></text>
+<text x="778" y="209" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="700" fill="#efefef">frugal</text>
+<path d="M790 190h132a4 4 0 0 1 4 4v20a4 4 0 0 1 -4 4h-132z" fill="#338ced"/>
+<text x="936" y="209" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="16" font-weight="700" fill="#efefef">17,040<tspan dx="8" fill="#9c9c9c" font-weight="400">(−55%)</tspan></text>
+</svg>

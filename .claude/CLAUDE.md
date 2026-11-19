@@ -22,6 +22,7 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 - `agents/*.md` — `stream-worker`, `researcher`, `visual-verifier`, `reviewer`.
 - `bench/` — on-versus-off benchmark: `tasks.js`, `run.js`, `report.js`, `variants/`, committed `results/<stamp>/`.
 - `templates/` — optional files users copy by hand.
+- `assets/` — README images: `banner.svg` and the light and dark benchmark charts. Their numbers are typed in by hand; redraw them when the README table changes.
 - `docs/` — reference for people and agents working on this repo; not loaded by the plugin.
 
 ## Reference docs (read when relevant, not up front)

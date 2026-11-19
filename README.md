@@ -1,10 +1,163 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="frugal: Claude Code that writes less. Against default Claude Code on Opus: output tokens −40%, code lines −40%, time −30%, 39 of 39 checks passed." width="880">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-257de0?style=flat-square" alt="MIT license">
+  <img src="https://img.shields.io/badge/benchmarked-156_Opus_sessions-257de0?style=flat-square" alt="Benchmarked on 156 Opus sessions">
+</p>
+
 # frugal
 
-Token-saving mode for Claude Code. Install it and every session and subagent gets a short set of rules for writing less code and less prose, with a `/frugal` switch, measured token stats and a benchmark you can re-run. It also ships an orchestration skill for long, multi-package jobs.
+**Claude Code over-builds. frugal stops it.**
+
+Ask for an email validator and you get 59 lines, a test harness and an essay. With frugal you get the 4 lines you needed and a short note on what it doesn't cover. Same model, same passing tests, 40% fewer output tokens.
+
+It is one short rules file, about 250 tokens, delivered by a hook to every session and subagent. No config, no levels, no per-prompt reminder. `/frugal off` turns it off.
+
+## Install
+
+```bash
+claude plugin marketplace add MateiSR/frugal
+claude plugin install frugal@frugal
+```
+
+Restart Claude Code (2.1.296 or newer). That's it: frugal is on in every session. `/frugal` shows what it has measured, `/frugal off` and `/frugal on` switch it.
+
+## Before and after
+
+One prompt, one real Opus session each: *"Write me a Python function that validates email addresses."*
+
+<table>
+<tr>
+<th width="50%">Default Claude Code · 59 lines · 1,259 output tokens · 10.7 s</th>
+<th width="50%">frugal · 4 lines · 245 output tokens · 2.8 s</th>
+</tr>
+<tr>
+<td valign="top">
+
+<details>
+<summary>Two regexes, a 40-line function, a docstring listing its own checks and a 16-case test harness (click to expand)</summary>
+
+```python
+import re
+
+# Local part: letters, digits, and common special characters. No leading,
+# trailing, or consecutive dots.
+_LOCAL_RE = re.compile(
+    r"^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*$"
+)
+
+# Domain label: 1-63 chars, alphanumeric at both ends, hyphens allowed inside.
+_LABEL_RE = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
+
+
+def is_valid_email(email: str) -> bool:
+    """Return True if `email` is a syntactically valid email address.
+
+    Checks:
+      - exactly one '@'
+      - local part <= 64 chars, allowed characters, no bad dot placement
+      - domain <= 253 chars, at least two labels, each label valid
+      - top-level domain is alphabetic and at least 2 chars
+      - total length <= 254 chars
+    """
+    if not isinstance(email, str) or len(email) > 254:
+        return False
+
+    if email.count("@") != 1:
+        return False
+
+    local, domain = email.split("@")
+
+    # Local part
+    if not local or len(local) > 64 or not _LOCAL_RE.match(local):
+        return False
+
+    # Domain (accept internationalized domains by converting to punycode)
+    try:
+        domain = domain.encode("idna").decode("ascii")
+    except UnicodeError:
+        return False
+
+    if not domain or len(domain) > 253:
+        return False
+
+    labels = domain.split(".")
+    if len(labels) < 2:
+        return False
+
+    if not all(_LABEL_RE.match(label) for label in labels):
+        return False
+
+    tld = labels[-1]
+    if len(tld) < 2 or not (tld.isalpha() or tld.lower().startswith("xn--")):
+        return False
+
+    return True
+
+
+if __name__ == "__main__":
+    tests = {
+        "user@example.com": True,
+        "first.last+tag@sub.example.co.uk": True,
+        "o'reilly@example.org": True,
+        "user@münchen.de": True,
+        "plainaddress": False,
+        "@example.com": False,
+        "user@": False,
+        "user@@example.com": False,
+        ".user@example.com": False,
+        "user.@example.com": False,
+        "us..er@example.com": False,
+        "user@localhost": False,
+        "user@-example.com": False,
+        "user@example.c": False,
+        "user@example..com": False,
+        "a" * 65 + "@example.com": False,
+    }
+    for addr, expected in tests.items():
+        result = is_valid_email(addr)
+        status = "OK  " if result == expected else "FAIL"
+        print(f"{status} {addr!r:45} -> {result}")
+```
+
+</details>
+
+Plus three paragraphs on what it doesn't accept.
+
+</td>
+<td valign="top">
+
+```python
+import re
+
+_EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$")
+
+def is_valid_email(email: str) -> bool:
+    return bool(_EMAIL_RE.fullmatch(email))
+```
+
+Plus one paragraph: it checks format only, rejects some unusual addresses the RFC allows, and names the `email-validator` package if you need more.
+
+</td>
+</tr>
+</table>
+
+The default version is more thorough. frugal's bet is that you asked for a function, not a library, and that it should tell you what it left out so you can ask for it.
 
 ## Benchmark
 
-156 real headless Claude Code sessions on Opus, frugal 0.6 against default Claude Code, Honey and Ponytail. Median change per task against default Claude Code; code lines are the total over all 23 tasks.
+156 real headless Claude Code sessions on Opus: frugal 0.6 against default Claude Code and the two plugins it borrows from, [Honey](https://github.com/Green-PT/honey-for-devs) and [Ponytail](https://github.com/DietrichGebert/ponytail).
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/benchmark-dark.svg">
+    <img src="assets/benchmark-light.svg" alt="Code lines written over 23 tasks: default Claude Code 409, Ponytail 290, Honey 189, frugal 160. Output tokens over 39 sessions: default 37,487, Ponytail 27,998, Honey 18,635, frugal 17,040." width="880">
+  </picture>
+</p>
+
+Median change per task against default Claude Code; code lines are the total over all 23 tasks.
 
 | | Output tokens | Session cost | Time | Code lines written | Checks passed |
 | :--- | ---: | ---: | ---: | ---: | ---: |
@@ -15,14 +168,15 @@ Token-saving mode for Claude Code. Install it and every session and subagent get
 
 `(ns)` means not statistically significant (p ≥ 0.05, exact Wilcoxon signed-rank test over the 23 tasks). Every other change in the table is significant.
 
-How to read it:
+What the numbers say:
 
 - frugal writes the least output and the least code and is the fastest. Honey is slightly cheaper per session (−9% against −6%), because it injects fewer tokens.
 - Cost moves far less than output, because output is a small share of what a session bills; most of it is input and cache. That is also why Ponytail costs more than the default here: its rules and repo map add about 30% to the uncached input, which its shorter output does not pay back on small tasks.
 - The gap is widest on open-ended requests. On the eight tasks where code size varies most, frugal cut cost by 28% and code lines by 64% (Honey −26% and −46%, Ponytail −3% and −38%, neither Ponytail figure significant). On Ponytail's own five prompts ("write me an email validator", "build me a countdown timer in React"), default Claude Code wrote 225 lines, Ponytail 71, Honey 60, frugal 45.
 - Every arm passed every check, so these tasks do not show a quality difference in either direction. Nothing here measures whether the shorter code is better; a 4-line email validator is shorter, not necessarily what you wanted.
 
-How it was run:
+<details>
+<summary><b>How it was run</b></summary>
 
 - Each session is a real headless Claude Code run (`claude -p`, `--model opus`, Claude Code 2.1.332) in a fresh workspace, with file tools only and no user settings, rules, output style or MCP servers (`--setting-sources project --strict-mcp-config`).
 - Each arm loads exactly one plugin with `--plugin-dir`, at its default full level: Ponytail at commit `ebd8654`, Honey at `cc82b7e`, frugal with the rules shipped in 0.6. Before the run, a probe session per plugin confirms its instructions reached the model.
@@ -36,6 +190,8 @@ How it was run:
 ```bash
 node bench/run.js --stamp <name> --model opus --runs 1 --arms off,on,ponytail,honey --dry   # prints the session count; drop --dry and add --yes to start
 ```
+
+</details>
 
 Earlier runs, including the Sonnet runs behind frugal 0.4 and the rules variants that were tried and dropped, are in [`bench/results/`](bench/results) and [`bench/variants/`](bench/variants).
 

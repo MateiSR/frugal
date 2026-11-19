@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400" role="img" aria-label="frugal: Claude Code that writes less. Against default Claude Code on Opus: output tokens −40%, code lines −40%, time −30%, 39 of 39 checks passed.">
+<rect width="1200" height="400" rx="20" fill="#141414"/>
+<text x="60" y="112" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="76" font-weight="700" fill="#efefef">frugal<tspan fill="#338ced">_</tspan></text>
+<text x="60" y="164" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="28" fill="#c4c4c4">Claude Code that writes less. Less code, fewer tokens, same passing tests.</text>
+<rect x="60" y="210" width="255" height="120" rx="12" fill="#1f1f1f" stroke="#2e2e2e"/>
+<text x="84" y="270" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="46" font-weight="700" fill="#338ced">−40%</text>
+<text x="84" y="304" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="20" fill="#9c9c9c">output tokens</text>
+<rect x="335" y="210" width="255" height="120" rx="12" fill="#1f1f1f" stroke="#2e2e2e"/>
+<text x="359" y="270" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="46" font-weight="700" fill="#338ced">−40%</text>
+<text x="359" y="304" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="20" fill="#9c9c9c">code lines</text>
+<rect x="610" y="210" width="255" height="120" rx="12" fill="#1f1f1f" stroke="#2e2e2e"/>
+<text x="634" y="270" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="46" font-weight="700" fill="#338ced">−30%</text>
+<text x="634" y="304" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="20" fill="#9c9c9c">time</text>
+<rect x="885" y="210" width="255" height="120" rx="12" fill="#1f1f1f" stroke="#2e2e2e"/>
+<text x="909" y="270" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="46" font-weight="700" fill="#efefef">39/39</text>
+<text x="909" y="304" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="20" fill="#9c9c9c">checks passed</text>
+<text x="60" y="368" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif" font-size="18" fill="#8a8a8a">Median change per task against default Claude Code · Opus · 156 real sessions · 23 tasks</text>
+</svg>
