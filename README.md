@@ -28,16 +28,27 @@ Restart Claude Code (2.1.296 or newer). That's it: frugal is on in every session
 
 One prompt, one real Opus session each: *"Write me a Python function that validates email addresses."*
 
-<table>
-<tr>
-<th width="50%">Default Claude Code · 59 lines · 1,259 output tokens · 10.7 s</th>
-<th width="50%">frugal · 8 lines · 708 output tokens · 6.7 s</th>
-</tr>
-<tr>
-<td valign="top">
+**With frugal** — 8 lines · 708 output tokens · 6.7 s
+
+```python
+import re
+
+_EMAIL = re.compile(
+    r"(?P<local>[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*)"
+    r"@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}"
+)
+
+def is_valid_email(address: str) -> bool:
+    m = _EMAIL.fullmatch(address)
+    return bool(m) and len(address) <= 254 and len(m["local"]) <= 64
+```
+
+Plus three lines: which rules it checks, which rare valid forms it rejects, and that only a confirmation email proves an address exists.
+
+**Default Claude Code** — 59 lines · 1,259 output tokens · 10.7 s
 
 <details>
-<summary>Two regexes, a 40-line function, a docstring listing its own checks and a 16-case test harness (click to expand)</summary>
+<summary>Show all 59 lines: two regexes, a 40-line function, a docstring listing its own checks and a 16-case test harness</summary>
 
 ```python
 import re
@@ -125,28 +136,6 @@ if __name__ == "__main__":
 </details>
 
 Plus three paragraphs on what it doesn't accept.
-
-</td>
-<td valign="top">
-
-```python
-import re
-
-_EMAIL = re.compile(
-    r"(?P<local>[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*)"
-    r"@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}"
-)
-
-def is_valid_email(address: str) -> bool:
-    m = _EMAIL.fullmatch(address)
-    return bool(m) and len(address) <= 254 and len(m["local"]) <= 64
-```
-
-Plus three lines: which rules it checks, which rare valid forms it rejects, and that only a confirmation email proves an address exists.
-
-</td>
-</tr>
-</table>
 
 Both enforce the same length and character rules. frugal leaves out the test harness, the docstring that repeats the code and the internationalized-domain handling, and says so.
 
