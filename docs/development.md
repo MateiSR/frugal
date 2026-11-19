@@ -50,12 +50,15 @@ node bench/run.js --stamp <name> --model opus --screen --arms off,on,v-<variant>
 node bench/run.js --stamp <name> --model opus --screen --arms off,on,v-<variant>         # screening: 1 run of 8 tasks per arm; never quote it
 node bench/run.js --stamp <date>-<model> --model sonnet --runs 3 --workers 6   # full run, about 15 minutes
 node bench/report.js <stamp>                      # free: re-render report.md from results.json
+node bench/judge.js --out <stamp> --from <stamp>,<stamp> --arms off,on,ponytail,honey --dry   # blind quality review of saved results; one call per task per pass
+node bench/draw.js assets                         # free: redraw the README banner and charts (numbers are typed in at the top of the file)
 ```
 
 - Runs use the Claude subscription login; `ANTHROPIC_API_KEY` is removed from the child environment unless you pass `--api-key`.
 - Arms are defined in `bench/run.js` (`ARMS`, `ARM_ENV`). To test a rules change, add a file under `bench/variants/` and an arm that points `FRUGAL_RULES` at it. The `full` arm does this for the long rules shipped before v0.4.
 - Finished sessions are cached in `bench/.cache/` (git-ignored), keyed by model, task, arm, what the arm injects (rules file and hook, or rival commit), CLI version and run number. Re-running a command reuses them, so a stopped run resumes and an edited variant costs only its own arm. Delete the directory to force fresh sessions.
 - A run that would start more than 20 new sessions stops unless you pass `--yes`. Screen variants first, then run the winner on all tasks, then 3 runs only for what ships.
+- `bench/judge.js` reads the first run of each arm from the stamps given (reply plus the files the session wrote), shows them to the judge under shuffled letters and appends each verdict to `judge.jsonl` in the `--out` stamp. A rules change must be judged as well as measured: the 0.6 rules had the best savings and the worst review.
 - A stamp directory is never overwritten. Commit `results.json` and `report.md`; any number in the README must come from a committed stamp.
 - The method (paired medians, exact Wilcoxon test, arm-contamination check) is described at the top of `bench/report.js` and `bench/run.js`.
 

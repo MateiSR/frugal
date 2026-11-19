@@ -75,6 +75,13 @@ function allLines(task, dir, reply) {
   if (n) return n;
   return [...reply.matchAll(/```[^\n]*\n([\s\S]*?)```/g)].reduce((s, m) => s + codeLines(m[1]).length, 0);
 }
+// Every file the session added or changed, so a later quality review can read the code itself.
+function written(task, dir) {
+  const out = {};
+  const walk = (d) => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { if (f.name.startsWith('.') || f.name === 'node_modules' || f.name === '__pycache__') continue; const p = path.join(d, f.name); if (f.isDirectory()) walk(p); else { const rel = path.relative(dir, p), text = fs.readFileSync(p, 'utf8'); if (text !== (task.files || {})[rel]) out[rel] = text.slice(0, 20000); } } };
+  walk(dir);
+  return out;
+}
 function grade(task, dir, reply) {
   if (task.kind === 'open') return allLines(task, dir, reply) > 0;
   if (task.kind === 'explain') return task.facts.every((f) => new RegExp(f, 'i').test(reply));
@@ -126,6 +133,7 @@ function runCell(cell, model, env) {
           reply: r.result || '', code,
           loc: task.target ? addedLines((task.files || {})[task.target], code) : null,
           loc_all: allLines(task, dir, r.result || ''),
+          files: written(task, dir),
           extra_files: fs.readdirSync(dir).filter((f) => !f.startsWith('.') && f !== task.target && !(task.files || {})[f]),
           // Arm integrity: the frugal hook must have fired on "on" and must not have on the others.
           hook_fired: /"ev":"session","mode":"on"/.test(hookLog),
