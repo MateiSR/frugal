@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="frugal: Claude Code that writes less. Against default Claude Code on Opus: output tokens −40%, code lines −40%, time −30%, 39 of 39 checks passed." width="880">
+  <img src="assets/banner.svg" alt="frugal: Claude Code that writes less. Against default Claude Code on Opus: output tokens −29%, code lines −29%, time −21%, quality on par in a blind review." width="880">
 </p>
 
 <p align="center">
@@ -11,9 +11,9 @@
 
 **Claude Code over-builds. frugal stops it.**
 
-Ask for an email validator and you get 59 lines, a test harness and an essay. With frugal you get the 4 lines you needed and a short note on what it doesn't cover. Same model, same passing tests, 40% fewer output tokens.
+Ask for an email validator and you get 59 lines, a test harness and an essay. With frugal you get the 8 lines you needed and three lines on what they don't cover. Same model, same passing tests, about 30% less output, and a blind review rates the result as good as the default.
 
-It is one short rules file, about 250 tokens, delivered by a hook to every session and subagent. No config, no levels, no per-prompt reminder. `/frugal off` turns it off.
+It is one short rules file, about 330 tokens, delivered by a hook to every session and subagent. No config, no levels, no per-prompt reminder. `/frugal off` turns it off.
 
 ## Install
 
@@ -31,7 +31,7 @@ One prompt, one real Opus session each: *"Write me a Python function that valida
 <table>
 <tr>
 <th width="50%">Default Claude Code · 59 lines · 1,259 output tokens · 10.7 s</th>
-<th width="50%">frugal · 4 lines · 245 output tokens · 2.8 s</th>
+<th width="50%">frugal · 8 lines · 708 output tokens · 6.7 s</th>
 </tr>
 <tr>
 <td valign="top">
@@ -132,60 +132,81 @@ Plus three paragraphs on what it doesn't accept.
 ```python
 import re
 
-_EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$")
+_EMAIL = re.compile(
+    r"(?P<local>[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*)"
+    r"@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}"
+)
 
-def is_valid_email(email: str) -> bool:
-    return bool(_EMAIL_RE.fullmatch(email))
+def is_valid_email(address: str) -> bool:
+    m = _EMAIL.fullmatch(address)
+    return bool(m) and len(address) <= 254 and len(m["local"]) <= 64
 ```
 
-Plus one paragraph: it checks format only, rejects some unusual addresses the RFC allows, and names the `email-validator` package if you need more.
+Plus three lines: which rules it checks, which rare valid forms it rejects, and that only a confirmation email proves an address exists.
 
 </td>
 </tr>
 </table>
 
-The default version is more thorough. frugal's bet is that you asked for a function, not a library, and that it should tell you what it left out so you can ask for it.
+Both enforce the same length and character rules. frugal leaves out the test harness, the docstring that repeats the code and the internationalized-domain handling, and says so.
 
 ## Benchmark
 
-156 real headless Claude Code sessions on Opus: frugal 0.6 against default Claude Code and the two plugins it borrows from, [Honey](https://github.com/Green-PT/honey-for-devs) and [Ponytail](https://github.com/DietrichGebert/ponytail).
+156 real headless Claude Code sessions on Opus: frugal 0.7 against default Claude Code and the two plugins it borrows from, [Honey](https://github.com/Green-PT/honey-for-devs) and [Ponytail](https://github.com/DietrichGebert/ponytail). Then a blind review of what each one produced.
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/benchmark-dark.svg">
-    <img src="assets/benchmark-light.svg" alt="Code lines written over 23 tasks: default Claude Code 409, Ponytail 290, Honey 189, frugal 160. Output tokens over 39 sessions: default 37,487, Ponytail 27,998, Honey 18,635, frugal 17,040." width="880">
+    <img src="assets/benchmark-light.svg" alt="Code lines written over 23 tasks: default Claude Code 407, Ponytail 287, Honey 184, frugal 183. Ranked best in a blind review, of 46 comparisons: frugal 21, default Claude Code 16, Ponytail 9, Honey 0." width="880">
   </picture>
 </p>
+
+### Savings
 
 Median change per task against default Claude Code; code lines are the total over all 23 tasks.
 
 | | Output tokens | Session cost | Time | Code lines written | Checks passed |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| Default Claude Code | baseline | baseline | baseline | 409 | 39/39 |
-| **frugal 0.6** | **−40%** | **−6%** | **−30%** | **160** | 39/39 |
-| Honey 1.4.0 | −32% | −9% | −26% | 189 | 39/39 |
-| Ponytail 5.3.3 | +3% (ns) | +23% | −3% (ns) | 290 | 39/39 |
+| Default Claude Code | baseline | baseline | baseline | 407 | 39/39 |
+| **frugal 0.7** | **−29%** | **0% (ns)** | **−21%** | **183** | 39/39 |
+| Honey 1.4.0 | −32% | −9% | −26% | 184 | 39/39 |
+| Ponytail 5.3.3 | +3% (ns) | +23% | −3% (ns) | 287 | 39/39 |
 
-`(ns)` means not statistically significant (p ≥ 0.05, exact Wilcoxon signed-rank test over the 23 tasks). Every other change in the table is significant.
+`(ns)` means not statistically significant (p ≥ 0.05, exact Wilcoxon signed-rank test over the 23 tasks).
+
+### Quality
+
+The same outputs, shown to a judge with the names removed and the order shuffled. It scored each from 1 to 10 and ranked the four. 23 tasks, two passes each.
+
+| | Correctness | Fit to the request | Reply | Mean rank (1 is best) | Ranked best | Ranked last |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Default Claude Code | 8.6 | 8.3 | 8.2 | 2.09 | 16 | 6 |
+| **frugal 0.7** | **8.9** | **8.7** | **8.3** | **2.04** | **21** | 6 |
+| Ponytail 5.3.3 | 8.5 | 8.2 | 8.2 | 2.61 | 9 | 13 |
+| Honey 1.4.0 | 8.3 | 8.5 | 7.7 | 3.26 | 0 | 21 |
+
+Task by task, frugal was ranked above Honey on 18 of 23 (p = 0.004), above Ponytail on 14 of 23 (not significant) and above default Claude Code on 11, below on 9, level on 3 (not significant).
 
 What the numbers say:
 
-- frugal writes the least output and the least code and is the fastest. Honey is slightly cheaper per session (−9% against −6%), because it injects fewer tokens.
-- Cost moves far less than output, because output is a small share of what a session bills; most of it is input and cache. That is also why Ponytail costs more than the default here: its rules and repo map add about 30% to the uncached input, which its shorter output does not pay back on small tasks.
-- The gap is widest on open-ended requests. On the eight tasks where code size varies most, frugal cut cost by 28% and code lines by 64% (Honey −26% and −46%, Ponytail −3% and −38%, neither Ponytail figure significant). On Ponytail's own five prompts ("write me an email validator", "build me a countdown timer in React"), default Claude Code wrote 225 lines, Ponytail 71, Honey 60, frugal 45.
-- Every arm passed every check, so these tasks do not show a quality difference in either direction. Nothing here measures whether the shorter code is better; a 4-line email validator is shorter, not necessarily what you wanted.
+- frugal and Honey cut the same amount of code, less than half of what default Claude Code writes. Honey is a little ahead on output tokens and cost; frugal is well ahead on quality.
+- frugal's quality is level with default Claude Code. That is the point: a third less output, with nothing a reviewer misses.
+- Session cost does not move. Output is a small share of what a session bills; most of it is input and cache, and frugal's rules add about 9% to the uncached input. On open-ended requests, where default Claude Code over-builds most, the saving is real: on the eight tasks where code size varies most, frugal cut cost by 19%, output by 46% and code lines by 57% (Honey −25%, −50%, −43%; Ponytail's changes there are not significant).
+- Savings and quality trade off. An earlier, shorter version of the rules (0.6) saved more (−40% output, −6% cost) and was ranked last in the same review, for thin replies and looser code. The rules now ask for the edge cases a careful reviewer expects and for up to three lines on what was assumed or left out.
+- Ponytail costs more than the default here because its rules and repo map add about 31% to the uncached input, which its shorter output does not pay back on small tasks.
 
 <details>
 <summary><b>How it was run</b></summary>
 
 - Each session is a real headless Claude Code run (`claude -p`, `--model opus`, Claude Code 2.1.332) in a fresh workspace, with file tools only and no user settings, rules, output style or MCP servers (`--setting-sources project --strict-mcp-config`).
-- Each arm loads exactly one plugin with `--plugin-dir`, at its default full level: Ponytail at commit `ebd8654`, Honey at `cc82b7e`, frugal with the rules shipped in 0.6. Before the run, a probe session per plugin confirms its instructions reached the model.
+- Each arm loads exactly one plugin with `--plugin-dir`, at its default full level: Ponytail at commit `ebd8654`, Honey at `cc82b7e`, frugal with the rules shipped in 0.7. Before the run, a probe session per plugin confirms its instructions reached the model.
 - 23 tasks: 13 of our own (9 unit-tested code tasks and bug fixes, 3 explanations, a review), Ponytail's five open-ended prompts copied verbatim from its benchmark config, and five of Honey's unit-tested tasks read from its repository.
 - The eight tasks where code size varies most ran 3 times per arm and the other 15 once, to limit the number of sessions. Runs of a task are collapsed by median before comparing.
 - Checks are unit tests for code tasks, required facts for explanations and "produced code" for the open-ended prompts. One of the unit-tested tasks is a path-traversal guard that is implied but not asked for.
 - Code lines are the non-blank, non-comment lines in every file the session wrote or changed, or the code blocks in its reply if it wrote no file. Cost is Claude Code's own `total_cost_usd`, so it includes the tokens each plugin injects.
+- The quality judge is one Opus call per task per pass, with no tools. It sees the request, any starter files, and each arm's first-run reply and written files under a shuffled letter, scores correctness, fit and reply, then ranks. The judge is the same model family that wrote the outputs, and it is one judge, not a panel; treat small gaps as noise.
 - Not measured: long multi-turn sessions, tasks that run shell commands, models other than Opus, and Caveman (its rules cover prose only, not how much code to write).
-- Full report with per-task numbers and every reply: [`bench/results/2026-11-19-opus-v0.6`](bench/results/2026-11-19-opus-v0.6/report.md). To re-run it, clone the two plugins into a sibling `token-savers/` directory and run:
+- Full report with per-task numbers and every reply: [`bench/results/2026-11-19-opus-v0.7`](bench/results/2026-11-19-opus-v0.7/report.md), judge verdicts with reasons in [`judge.jsonl`](bench/results/2026-11-19-opus-v0.7/judge.jsonl). To re-run it, clone the two plugins into a sibling `token-savers/` directory and run:
 
 ```bash
 node bench/run.js --stamp <name> --model opus --runs 1 --arms off,on,ponytail,honey --dry   # prints the session count; drop --dry and add --yes to start
@@ -193,7 +214,7 @@ node bench/run.js --stamp <name> --model opus --runs 1 --arms off,on,ponytail,ho
 
 </details>
 
-Earlier runs, including the Sonnet runs behind frugal 0.4 and the rules variants that were tried and dropped, are in [`bench/results/`](bench/results) and [`bench/variants/`](bench/variants).
+Earlier runs, including the 0.6 rules and their review, the Sonnet runs behind frugal 0.4 and the rules variants that were tried and dropped, are in [`bench/results/`](bench/results) and [`bench/variants/`](bench/variants).
 
 ## Frugal mode
 
@@ -202,17 +223,18 @@ Earlier runs, including the Sonnet runs behind frugal 0.4 and the rules variants
 One short file, [`rules/frugal.md`](rules/frugal.md):
 
 - **Least code** — use the repo's helpers, the standard library or an installed dependency before writing new code.
-- **Smallest version** — a vague request gets the version that does the core job. No options, wrappers, extra files, demo code, signature-restating docstrings or "for later" code nobody asked for; comments only for a why the code cannot show.
-- **Fix the cause** — check the other callers of what you change.
+- **Smallest version, done well** — a vague request gets the version that does the core job. No options, wrappers, extra files, demo code, signature-restating docstrings or "for later" code nobody asked for.
+- **Small is not sloppy** — handle the inputs and edge cases a careful reviewer would expect; between two options of similar size, take the more correct one.
+- **Fix the cause** — check the other callers of what you change; inputs that worked before must still work.
 - **Keep what makes code safe** — validation at trust boundaries, error handling that prevents data loss, security, accessibility, anything the user asked for.
-- **Brief replies** — answer first, no preamble or narration, no repeating code already written to a file, one line on anything left out or not checked, a fuller explanation when asked or when brevity would hide a risk. Code, identifiers, commands and errors stay exact.
+- **Brief replies that still inform** — answer first, no preamble or narration, no repeating code already written to a file; then at most three short lines on edge behaviour, assumptions and what was left out or not checked.
 - **Read less** — search before reading, never re-read unchanged files.
 
 ### When they are injected
 
 | Moment | Hook | What is sent |
 | :--- | :--- | :--- |
-| Session start, resume, `/clear`, after compaction | `SessionStart` | The rules (about 250 tokens) |
+| Session start, resume, `/clear`, after compaction | `SessionStart` | The rules (about 330 tokens) |
 | A subagent starts | `SubagentStart` | The rules, except to agents that only locate, plan or look |
 | The mode was switched mid-session | `UserPromptSubmit` | The rules once (on), or a one-line "disregard them" (off) |
 
