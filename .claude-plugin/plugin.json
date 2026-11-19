@@ -1,6 +1,6 @@
 {
   "name": "frugal",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Frugal mode for Claude Code: a short always-on rule set for less code and less prose in every session and subagent, a /frugal toggle with measured token stats, a committed on-versus-off benchmark, and an orchestration skill.",
   "license": "MIT",
   "repository": "https://github.com/MateiSR/frugal",
