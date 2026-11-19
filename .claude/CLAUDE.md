@@ -20,7 +20,7 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 - `skills/orchestrate/SKILL.md` — the orchestrator's instructions.
 - `skills/debug/SKILL.md` — root-cause method for a bug that survived two fixes.
 - `agents/*.md` — `stream-worker`, `researcher`, `visual-verifier`, `reviewer`.
-- `bench/` — on-versus-off benchmark: `tasks.js`, `run.js`, `report.js`, `variants/`, committed `results/<stamp>/`.
+- `bench/` — on-versus-off benchmark: `tasks.js`, `run.js`, `report.js`, `judge.js` (blind quality review), `draw.js` (README images), `variants/`, committed `results/<stamp>/`.
 - `templates/` — optional files users copy by hand.
 - `assets/` — README images: `banner.svg` and the light and dark benchmark charts. Their numbers are typed in by hand; redraw them when the README table changes.
 - `docs/` — reference for people and agents working on this repo; not loaded by the plugin.
@@ -45,7 +45,7 @@ The hook test script, headless checks and release steps are in `docs/development
 
 - A hook must never break a session: `hooks/frugal.js` exits 0 with no output on any error. Keep it dependency-free.
 - Do not put tokens into context that the user did not ask for. `/frugal` replies and stats go out through a blocked prompt, never through `additionalContext`.
-- Change the rules or the injection only with a benchmark run behind it, and quote only numbers from a committed stamp in `bench/results/`.
+- Change the rules or the injection only with a benchmark run and a `bench/judge.js` review behind it, and quote only numbers from a committed stamp in `bench/results/`.
 - Stats report measured numbers. Never add an assumed savings percentage or a benchmark constant.
 - `rules/frugal.md` is adapted from Honey for Devs (MIT). Keep `NOTICE` accurate if it changes substantially.
 - Refer to agents by their namespaced type, `frugal:<agent>`, in skill and agent bodies. Frontmatter `name` stays bare (no `:`).

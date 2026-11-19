@@ -23,6 +23,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Since v0.5, rules/frugal.md and bench/variants/{tight,lean,mini}.md also adapt several sentences from the
+Since v0.5, rules/frugal.md and the newer files in bench/variants/ also adapt several sentences from the
 "ponytail" skill of Ponytail (https://github.com/DietrichGebert/ponytail, skills/ponytail/SKILL.md),
 Copyright (c) 2026 DietrichGebert, used under the same MIT License text as above.

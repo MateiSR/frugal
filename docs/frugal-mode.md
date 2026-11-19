@@ -10,7 +10,7 @@ How the always-on rules are delivered, switched and measured. All of it is `hook
 
 ## The rules are short on purpose
 
-`rules/frugal.md` is about 170 words (roughly 250 tokens), plain sentences, no emphasis header.
+`rules/frugal.md` is about 230 words (roughly 330 tokens), plain sentences, no emphasis header.
 
 Until v0.4 the plugin shipped a 1,700-token rule set with an "ACTIVE" header and a one-line reminder on every prompt. The first benchmark (`bench/results/2026-11-14-sonnet`) showed that version cutting output by 18% while raising session cost by 48% on short tasks, and the short rules cutting output by 31% at no cost change. The long rules are kept as `bench/variants/full.md` so the comparison can be re-run.
 
