@@ -15,6 +15,7 @@ Generated copies of `rules/frugal.md` must stay in sync with the source file:
 ```bash
 node scripts/build-rules.js          # regenerate static rule copies
 node scripts/build-rules.js --check  # verify copies match rules/frugal.md (exits non-zero on drift)
+node scripts/test-install.js         # test scripts/install.js in a temporary HOME/XDG dir
 ```
 
 ### Hooks

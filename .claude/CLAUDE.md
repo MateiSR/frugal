@@ -17,6 +17,8 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 - `AGENTS.md` — generated copy of `rules/frugal.md` for tools that read a root `AGENTS.md` (regenerate with `node scripts/build-rules.js`).
 - `gemini-extension.json` — Gemini CLI extension manifest pointing `contextFileName` at `AGENTS.md`.
 - `scripts/build-rules.js` — generates static rule copies from `rules/frugal.md` (`--check` fails on drift).
+- `scripts/install.js` — installs or removes static frugal rules (marked blocks) for Cursor, Windsurf, Cline, Copilot (VS Code), Kiro, Kilo, Qoder, Antigravity IDE, Codex, OpenCode, Grok, Goose and Amp.
+- `scripts/test-install.js` — tests `scripts/install.js` in a throwaway temporary home directory.
 - `hooks/hooks.json` — registers `SessionStart`, `SubagentStart`, `UserPromptSubmit`.
 - `hooks/frugal.js` — all three hooks, the `/frugal` command and stats.
 - `skills/frugal/SKILL.md` — fallback for `/frugal` if the hook did not run.

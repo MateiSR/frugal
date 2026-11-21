@@ -32,7 +32,8 @@ The benchmark numbers below were measured in Claude Code on Opus only. Other too
 | :--- | :--- | :--- |
 | Claude Code | Hooks (plugin) | Yes (`/frugal on\|off`) |
 | Gemini CLI | Static file (`gemini-extension.json` → `AGENTS.md`) | No (disable extension) |
-| Codex, OpenCode, Amp, Jules, Zed, Aider, Goose, Grok, etc. | Static file (`AGENTS.md`) | No |
+| Cursor, Windsurf, Cline, GitHub Copilot (VS Code), Kiro, Kilo Code, Qoder, Antigravity IDE | Static file (`node scripts/install.js`) | No |
+| Codex, OpenCode, Grok, Goose, Amp, Jules, Zed, Aider | Static file (`AGENTS.md` or `node scripts/install.js`) | No |
 
 Install in Gemini CLI:
 
@@ -40,7 +41,14 @@ Install in Gemini CLI:
 gemini extensions install https://github.com/MateiSR/frugal
 ```
 
-Or copy `AGENTS.md` into your project root for any tool that reads it.
+Install static rules into other tools (appends a marked block to existing files; `--uninstall` removes only what frugal added):
+
+```bash
+node scripts/install.js --list
+node scripts/install.js --only cursor,windsurf    # global default; add --project for current repo
+node scripts/install.js --dry-run                 # preview without writing
+node scripts/install.js --uninstall               # remove frugal blocks
+```
 
 ## Before and after
 
