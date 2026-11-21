@@ -8,6 +8,15 @@ claude plugin validate .
 
 Must end with `Validation passed`. The "no icon" notice is about the public plugin directory and can be ignored.
 
+### Static rule copies
+
+Generated copies of `rules/frugal.md` must stay in sync with the source file:
+
+```bash
+node scripts/build-rules.js          # regenerate static rule copies
+node scripts/build-rules.js --check  # verify copies match rules/frugal.md (exits non-zero on drift)
+```
+
 ### Hooks
 
 Run the script directly against a throwaway state directory, so your real `~/.claude/frugal/` is untouched:

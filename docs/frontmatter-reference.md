@@ -71,3 +71,12 @@ Source: [hooks reference](https://code.claude.com/docs/en/hooks).
 - Invoked as `/<plugin>:<skill>`; the bare `/<skill>` also works unless another command uses that name.
 - `disable-model-invocation: true` keeps a skill for the user's explicit use.
 - Substituted in skill content: `$ARGUMENTS`, `${CLAUDE_SESSION_ID}`, `${CLAUDE_SKILL_DIR}`, `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`, `${CLAUDE_PROJECT_DIR}`.
+
+## Other tools
+
+Keys and paths for other coding tools, checked against their official documentation on 2026-11-26.
+
+| Tool | File / key | Notes | Source |
+| :--- | :--- | :--- | :--- |
+| Universal (`AGENTS.md` readers) | `AGENTS.md` | Root-level standing instructions read by Codex, OpenCode, Amp, Jules, Zed, Aider, Goose, Grok, and others. | [agents.md](https://agents.md/) (checked 2026-11-26) |
+| Gemini CLI | `gemini-extension.json` (`contextFileName`) | Extension manifest pointing `contextFileName` at `AGENTS.md`; loaded into context at session start. Validated with `gemini extensions validate .` (v0.50.0). | [Gemini CLI extensions](https://geminicli.com/docs/extensions/writing-extensions/) (checked 2026-11-26) |

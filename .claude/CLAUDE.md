@@ -5,7 +5,7 @@ Claude Code plugin and single-repo marketplace with two parts:
 1. **Frugal mode** — hooks that inject token-saving rules into every session and subagent, plus the `/frugal` toggle and stats.
 2. **Orchestration** — the `/frugal:orchestrate` skill, four subagents and a `debug` skill.
 
-The only code is `hooks/frugal.js` (Node, no dependencies, no build step). Everything else is Markdown and JSON.
+The plugin runtime is `hooks/frugal.js` (Node, no dependencies, no build step); tooling under `scripts/` is also dependency-free Node. Everything else is Markdown and JSON.
 
 This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin root is not loaded for plugin users and makes `claude plugin validate` warn.
 
@@ -13,7 +13,10 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 
 - `.claude-plugin/plugin.json` — plugin manifest; the only place `version` is set.
 - `.claude-plugin/marketplace.json` — marketplace manifest, plugin `source` is `./`.
-- `rules/frugal.md` — the rules text the hooks inject. Keep it short: every token here is paid in every session and subagent.
+- `rules/frugal.md` — the single source of truth for the rules text. Keep it short: every token here is paid in every session and subagent.
+- `AGENTS.md` — generated copy of `rules/frugal.md` for tools that read a root `AGENTS.md` (regenerate with `node scripts/build-rules.js`).
+- `gemini-extension.json` — Gemini CLI extension manifest pointing `contextFileName` at `AGENTS.md`.
+- `scripts/build-rules.js` — generates static rule copies from `rules/frugal.md` (`--check` fails on drift).
 - `hooks/hooks.json` — registers `SessionStart`, `SubagentStart`, `UserPromptSubmit`.
 - `hooks/frugal.js` — all three hooks, the `/frugal` command and stats.
 - `skills/frugal/SKILL.md` — fallback for `/frugal` if the hook did not run.
@@ -64,7 +67,7 @@ Update them in the same commit as the change that makes them stale:
 | If you change | Also update |
 | :--- | :--- |
 | `hooks/frugal.js` or `hooks/hooks.json` (injection, state, commands, stats) | `docs/frugal-mode.md`, README "Frugal mode" |
-| `rules/frugal.md` | README "The rules"; run the benchmark and update the README table |
+| `rules/frugal.md` | Run `node scripts/build-rules.js`; README "The rules"; run the benchmark and update the README table |
 | A phase, option or rule in `skills/orchestrate/SKILL.md` | `docs/architecture.md`, README "Orchestration" |
 | An agent's model, effort, tools, TTL or role | `docs/architecture.md`, README agents table, the roster table in the orchestrate skill |
 | Any frontmatter, hook or settings key | `docs/frontmatter-reference.md`, README minimum version |

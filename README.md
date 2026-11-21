@@ -24,6 +24,24 @@ claude plugin install frugal@frugal
 
 Restart Claude Code (2.1.296 or newer). That's it: frugal is on in every session. `/frugal` shows what it has measured, `/frugal off` and `/frugal on` switch it.
 
+## Other tools
+
+The benchmark numbers below were measured in Claude Code on Opus only. Other tools receive the same rules file (`rules/frugal.md`) and are supported, but not benchmarked.
+
+| Tool | Delivery | Toggleable |
+| :--- | :--- | :--- |
+| Claude Code | Hooks (plugin) | Yes (`/frugal on\|off`) |
+| Gemini CLI | Static file (`gemini-extension.json` → `AGENTS.md`) | No (disable extension) |
+| Codex, OpenCode, Amp, Jules, Zed, Aider, Goose, Grok, etc. | Static file (`AGENTS.md`) | No |
+
+Install in Gemini CLI:
+
+```bash
+gemini extensions install https://github.com/MateiSR/frugal
+```
+
+Or copy `AGENTS.md` into your project root for any tool that reads it.
+
 ## Before and after
 
 One prompt, one real Opus session each: *"Write me a Python function that validates email addresses."*
