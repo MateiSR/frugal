@@ -15,67 +15,6 @@ Ask for an email validator and you get 59 lines, a test harness and an essay. Wi
 
 It is one short rules file, about 330 tokens, delivered by a hook to every session and subagent. No config, no levels, no per-prompt reminder. `/frugal off` turns it off.
 
-## Install
-
-```bash
-claude plugin marketplace add MateiSR/frugal
-claude plugin install frugal@frugal
-```
-
-Restart Claude Code (2.1.296 or newer). That's it: frugal is on in every session. `/frugal` shows what it has measured, `/frugal off` and `/frugal on` switch it.
-
-## Other tools
-
-The benchmark numbers below were measured in Claude Code on Opus only. Other tools receive the same rules file (`rules/frugal.md`) and are supported, but not benchmarked.
-
-| Tool | Delivery | Toggleable |
-| :--- | :--- | :--- |
-| Claude Code | Hooks (plugin) | Yes (`/frugal on\|off`) |
-| Codex CLI | Hooks (plugin) or static file (`~/.codex/AGENTS.md`) | Yes (hooks: `/frugal on\|off`) |
-| GitHub Copilot CLI | Hooks (plugin) | Session start (`frugal.js cli on\|off --host copilot`) |
-| Cursor | Hooks (`scripts/cursor-hooks.js`) or static file (`.mdc`) | Yes (hooks: `/frugal on\|off`) |
-| OpenCode | Extension (`.opencode/plugins/`) or static file (`AGENTS.md`) | Yes (extension: `/frugal on\|off`) |
-| Pi | Extension (`pi-extension/index.js`) | Yes (`/frugal on\|off`) |
-| Antigravity CLI (`agy`) | Plugin (`plugins/antigravity/`, always-on `rules/AGENTS.md`) | No (disable plugin) |
-| Gemini CLI | Extension (`gemini-extension.json` → `AGENTS.md`) | No (disable extension) |
-| Windsurf, Cline, GitHub Copilot (VS Code), Kiro, Kilo Code, Qoder, Antigravity IDE | Static file (`node scripts/install.js`) | No |
-| Grok, Goose, Amp, Jules, Zed, Aider | Static file (`AGENTS.md` or `node scripts/install.js`) | No |
-
-Plugin / hook installs:
-
-```bash
-# Codex CLI
-codex plugin marketplace add MateiSR/frugal
-codex plugin add frugal@frugal
-
-# GitHub Copilot CLI
-copilot plugin marketplace add MateiSR/frugal
-copilot plugin install frugal@frugal
-
-# Cursor hooks (merges into ~/.cursor/hooks.json; add --project for repo scope)
-node scripts/cursor-hooks.js install
-
-# Antigravity CLI
-agy plugin install https://github.com/MateiSR/frugal/tree/main/plugins/antigravity
-
-# Gemini CLI
-gemini extensions install https://github.com/MateiSR/frugal
-
-# Pi
-pi install git:github.com/MateiSR/frugal
-```
-
-For OpenCode, add `{"plugins": ["/path/to/frugal/.opencode/plugins"]}` to `opencode.json` (or `opencode` loads `.opencode/plugins/` from a checkout).
-
-Install static rules into editors and `AGENTS.md` tools (appends a marked block to existing files; `--uninstall` removes only what frugal added):
-
-```bash
-node scripts/install.js --list
-node scripts/install.js --only cursor,windsurf    # global default; add --project for current repo
-node scripts/install.js --dry-run                 # preview without writing
-node scripts/install.js --uninstall               # remove frugal blocks
-```
-
 ## Before and after
 
 One prompt, one real Opus session each: *"Write me a Python function that validates email addresses."*
@@ -256,6 +195,67 @@ node bench/run.js --stamp <name> --model opus --runs 1 --arms off,on,ponytail,ho
 </details>
 
 Earlier runs, including the 0.6 rules and their review, the Sonnet runs behind frugal 0.4 and the rules variants that were tried and dropped, are in [`bench/results/`](bench/results) and [`bench/variants/`](bench/variants).
+
+## Install
+
+```bash
+claude plugin marketplace add MateiSR/frugal
+claude plugin install frugal@frugal
+```
+
+Restart Claude Code (2.1.296 or newer). That's it: frugal is on in every session. `/frugal` shows what it has measured, `/frugal off` and `/frugal on` switch it.
+
+## Other tools
+
+The benchmark numbers above were measured in Claude Code on Opus only. Other tools receive the same rules file (`rules/frugal.md`) and are supported, but not benchmarked.
+
+| Tool | Delivery | Toggleable |
+| :--- | :--- | :--- |
+| Claude Code | Hooks (plugin) | Yes (`/frugal on\|off`) |
+| Codex CLI | Hooks (plugin) or static file (`~/.codex/AGENTS.md`) | Yes (hooks: `/frugal on\|off`) |
+| GitHub Copilot CLI | Hooks (plugin) | Session start (`frugal.js cli on\|off --host copilot`) |
+| Cursor | Hooks (`scripts/cursor-hooks.js`) or static file (`.mdc`) | Yes (hooks: `/frugal on\|off`) |
+| OpenCode | Extension (`.opencode/plugins/`) or static file (`AGENTS.md`) | Yes (extension: `/frugal on\|off`) |
+| Pi | Extension (`pi-extension/index.js`) | Yes (`/frugal on\|off`) |
+| Antigravity CLI (`agy`) | Plugin (`plugins/antigravity/`, always-on `rules/AGENTS.md`) | No (disable plugin) |
+| Gemini CLI | Extension (`gemini-extension.json` → `AGENTS.md`) | No (disable extension) |
+| Windsurf, Cline, GitHub Copilot (VS Code), Kiro, Kilo Code, Qoder, Antigravity IDE | Static file (`node scripts/install.js`) | No |
+| Grok, Goose, Amp, Jules, Zed, Aider | Static file (`AGENTS.md` or `node scripts/install.js`) | No |
+
+Plugin / hook installs:
+
+```bash
+# Codex CLI
+codex plugin marketplace add MateiSR/frugal
+codex plugin add frugal@frugal
+
+# GitHub Copilot CLI
+copilot plugin marketplace add MateiSR/frugal
+copilot plugin install frugal@frugal
+
+# Cursor hooks (merges into ~/.cursor/hooks.json; add --project for repo scope)
+node scripts/cursor-hooks.js install
+
+# Antigravity CLI
+agy plugin install https://github.com/MateiSR/frugal/tree/main/plugins/antigravity
+
+# Gemini CLI
+gemini extensions install https://github.com/MateiSR/frugal
+
+# Pi
+pi install git:github.com/MateiSR/frugal
+```
+
+For OpenCode, add `{"plugins": ["/path/to/frugal/.opencode/plugins"]}` to `opencode.json` (or `opencode` loads `.opencode/plugins/` from a checkout).
+
+Install static rules into editors and `AGENTS.md` tools (appends a marked block to existing files; `--uninstall` removes only what frugal added):
+
+```bash
+node scripts/install.js --list
+node scripts/install.js --only cursor,windsurf    # global default; add --project for current repo
+node scripts/install.js --dry-run                 # preview without writing
+node scripts/install.js --uninstall               # remove frugal blocks
+```
 
 ## Frugal mode
 
