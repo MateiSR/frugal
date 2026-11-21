@@ -16,6 +16,9 @@ Generated copies of `rules/frugal.md` must stay in sync with the source file:
 node scripts/build-rules.js          # regenerate static rule copies
 node scripts/build-rules.js --check  # verify copies match rules/frugal.md (exits non-zero on drift)
 node scripts/test-install.js         # test scripts/install.js in a temporary HOME/XDG dir
+node scripts/test-hooks.js           # test hooks (Claude, Codex, Copilot, Cursor), Cursor merger, OpenCode, Pi
+agy plugin validate plugins/antigravity --strict
+gemini extensions validate .
 ```
 
 ### Hooks

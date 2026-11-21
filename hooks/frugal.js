@@ -11,7 +11,26 @@ const path = require('path');
 const crypto = require('crypto');
 
 // FRUGAL_DIR lets tests and the benchmark use a throwaway state directory.
-const DATA = process.env.FRUGAL_DIR || path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'frugal');
+function parseHost(argv) {
+  const i = argv.indexOf('--host');
+  if (i >= 0 && argv[i + 1]) return argv[i + 1].toLowerCase();
+  if (process.env.CURSOR_VERSION && !process.env.CLAUDE_PLUGIN_ROOT) return 'cursor';
+  return 'claude';
+}
+
+function defaultDataDir(host) {
+  const home = os.homedir();
+  const xdg = process.env.XDG_CONFIG_HOME || path.join(home, '.config');
+  if (host === 'codex') return path.join(process.env.CODEX_HOME || path.join(home, '.codex'), 'frugal');
+  if (host === 'copilot') return process.env.COPILOT_PLUGIN_DATA || path.join(home, '.copilot', 'frugal');
+  if (host === 'cursor') return path.join(home, '.cursor', 'frugal');
+  if (host === 'opencode') return path.join(xdg, 'opencode', 'frugal');
+  if (host === 'pi') return path.join(home, '.pi', 'agent', 'frugal');
+  return path.join(process.env.CLAUDE_CONFIG_DIR || path.join(home, '.claude'), 'frugal');
+}
+
+const HOST = parseHost(process.argv.slice(2));
+const DATA = process.env.FRUGAL_DIR || defaultDataDir(HOST);
 const LOG = path.join(DATA, 'log.jsonl');
 const RULES = path.join(__dirname, '..', 'rules', 'frugal.md');
 const OFF_NOTICE = 'Frugal mode is now off. Disregard the earlier instructions to write the least code and reply briefly, and respond normally.';
@@ -27,11 +46,12 @@ const projectFile = (dir) => path.join(DATA, 'projects', crypto.createHash('sha1
 const sessionFile = (id) => path.join(DATA, 'sessions', safeId(id) + '.json');
 const loadSession = (id) => { try { return JSON.parse(read(sessionFile(id))) || {}; } catch { return {}; } };
 const saveSession = (id, s) => write(sessionFile(id), JSON.stringify(s));
-const projectDir = (input) => process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
+const sessionId = (input) => input.session_id || input.sessionId || input.conversation_id;
+const projectDir = (input) => process.env.CLAUDE_PROJECT_DIR || process.env.CURSOR_PROJECT_DIR || input.cwd || process.cwd();
 
 function scopes(input) {
   return {
-    session: onOff(loadSession(input.session_id).override),
+    session: onOff(loadSession(sessionId(input)).override),
     project: onOff(read(projectFile(projectDir(input)))),
     global: onOff(read(path.join(DATA, 'global'))),
   };
@@ -48,17 +68,37 @@ function rulesText() {
 function log(input, ev, extra) {
   try {
     fs.mkdirSync(DATA, { recursive: true });
-    fs.appendFileSync(LOG, JSON.stringify({ ts: new Date().toISOString(), sid: input.session_id, ev, ...extra }) + '\n');
+    fs.appendFileSync(LOG, JSON.stringify({ ts: new Date().toISOString(), sid: sessionId(input), ev, ...extra }) + '\n');
   } catch {}
 }
-const emit = (event, text) => process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: event, additionalContext: text } }));
+function emit(event, text) {
+  if (HOST === 'copilot') {
+    process.stdout.write(JSON.stringify({ additionalContext: text }));
+    return;
+  }
+  if (HOST === 'cursor') {
+    const out = { additional_context: text };
+    if (event === 'UserPromptSubmit') out.continue = true;
+    process.stdout.write(JSON.stringify(out));
+    return;
+  }
+  process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: event, additionalContext: text } }));
+}
+function emitBlock(reason) {
+  if (HOST === 'cursor') {
+    process.stdout.write(JSON.stringify({ continue: false, user_message: reason }));
+    return;
+  }
+  process.stdout.write(JSON.stringify({ decision: 'block', reason }));
+}
 
 function session(input) {
+  const sid = sessionId(input);
   const mode = effective(input);
-  const s = loadSession(input.session_id);
+  const s = loadSession(sid);
   const text = mode === 'on' ? rulesText() : '';
   s.announced = text ? 'on' : 'off';
-  saveSession(input.session_id, s);
+  saveSession(sid, s);
   log(input, 'session', { mode, source: input.source, chars: text.length, transcript: input.transcript_path });
   if (text) emit('SessionStart', text);
 }
@@ -72,33 +112,35 @@ function subagent(input) {
 }
 
 function prompt(input) {
+  const sid = sessionId(input);
   const m = /^\/frugal(?::frugal)?(?:\s+(.*))?$/s.exec((input.prompt || '').trim());
   if (m) {
     // Blocking the prompt shows the reply to the user without spending model tokens.
-    process.stdout.write(JSON.stringify({ decision: 'block', reason: command((m[1] || '').trim().split(/\s+/).filter(Boolean), input) }));
+    emitBlock(command((m[1] || '').trim().split(/\s+/).filter(Boolean), input));
     return;
   }
   const mode = effective(input);
-  const s = loadSession(input.session_id);
+  const s = loadSession(sid);
   let text = '';
   if (mode === 'on' && s.announced !== 'on') text = rulesText();
   else if (mode === 'off' && s.announced === 'on') text = OFF_NOTICE;
-  if (s.announced !== mode) { s.announced = mode; saveSession(input.session_id, s); }
+  if (s.announced !== mode) { s.announced = mode; saveSession(sid, s); }
   log(input, 'prompt', { mode, chars: text.length });
   if (text) emit('UserPromptSubmit', text);
 }
 
 function command(args, input) {
+  const sid = sessionId(input);
   const [verb = 'status', arg] = args;
   if (verb === 'status') return status(input);
   if (verb === 'stats') return stats(input, arg === 'all');
   if (!onOff(verb)) return USAGE;
   const scope = arg || 'session';
   if (scope === 'session') {
-    if (!input.session_id) return 'No session id here; use "project" or "global".';
-    const s = loadSession(input.session_id);
+    if (!sid) return 'No session id here; use "project" or "global".';
+    const s = loadSession(sid);
     s.override = verb;
-    saveSession(input.session_id, s);
+    saveSession(sid, s);
   } else if (scope === 'project') write(projectFile(projectDir(input)), verb);
   else if (scope === 'global') write(path.join(DATA, 'global'), verb);
   else return USAGE;
@@ -185,7 +227,13 @@ function stats(input, all) {
 }
 
 function main() {
-  const [mode, ...args] = process.argv.slice(2);
+  const raw = process.argv.slice(2);
+  const argv = [];
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === '--host') { i++; continue; }
+    argv.push(raw[i]);
+  }
+  const [mode, ...args] = argv;
   if (mode === 'cli') {
     // No hook input in a terminal: session scope needs an id, passed as --session <id>.
     const i = args.indexOf('--session');
@@ -199,4 +247,8 @@ function main() {
   ({ session, subagent, prompt })[mode]?.(input);
 }
 
-try { main(); } catch {}
+module.exports = { rulesText, effective, command, status, scopes, OFF_NOTICE, defaultDataDir };
+
+if (require.main === module) {
+  try { main(); } catch {}
+}

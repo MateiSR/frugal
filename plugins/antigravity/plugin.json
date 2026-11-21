@@ -1,0 +1,9 @@
+{
+  "name": "frugal",
+  "version": "0.7.0",
+  "description": "Write less code and shorter replies without cutting correctness.",
+  "author": {
+    "name": "MateiSR"
+  },
+  "repository": "https://github.com/MateiSR/frugal"
+}

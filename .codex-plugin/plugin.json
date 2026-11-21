@@ -1,0 +1,12 @@
+{
+  "name": "frugal",
+  "version": "0.7.0",
+  "description": "Write less code and shorter replies without cutting correctness.",
+  "author": {
+    "name": "MateiSR"
+  },
+  "repository": "https://github.com/MateiSR/frugal",
+  "license": "MIT",
+  "keywords": ["token-saving", "efficiency", "hooks", "minimalism"],
+  "hooks": "./hooks/codex-hooks.json"
+}

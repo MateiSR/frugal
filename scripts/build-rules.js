@@ -20,6 +20,10 @@ const TARGETS = [
     path: 'AGENTS.md',
     render: (rules) => rules,
   },
+  {
+    path: 'plugins/antigravity/rules/AGENTS.md',
+    render: (rules) => rules,
+  },
 ];
 
 function build(check) {

@@ -63,6 +63,14 @@ Effective mode: session override, else project, else global, else `on`.
 
 Environment overrides, for tests and the benchmark only: `FRUGAL_DIR` (state directory) and `FRUGAL_RULES` (rules file).
 
+### Other hosts (`--host`)
+
+`hooks/frugal.js` accepts an optional `--host <codex|copilot|cursor>` flag used by the per-tool hook manifests (`hooks/codex-hooks.json`, `hooks/copilot-hooks.json`, `hooks/cursor-hooks.json`). Without `--host`, Claude Code behaviour and state paths are unchanged. Per-host differences:
+
+- `codex`: stores state under `${CODEX_HOME:-~/.codex}/frugal/`; uses the same `hookSpecificOutput` and `decision: "block"` output shapes as Claude Code.
+- `copilot`: stores state under `${COPILOT_PLUGIN_DATA:-~/.copilot/frugal}/`; emits top-level `{"additionalContext": "..."}` on `sessionStart`.
+- `cursor`: stores state under `~/.cursor/frugal/`; emits `{"additional_context": "..."}` on `sessionStart`, `{"continue": false, "user_message": "..."}` for `/frugal` commands, and `{"continue": true, "additional_context": "..."}` on mid-session mode switches.
+
 ## `/frugal`
 
 Parsed from the raw prompt by the `UserPromptSubmit` hook (`/frugal` and `/frugal:frugal` both match). The reply is returned as a blocked prompt, so the model is not called and no tokens are spent. Claude learns about a switch on the next prompt, through the per-prompt logic above.

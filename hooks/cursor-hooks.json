@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "node \"FRUGAL_DIR/hooks/frugal.js\" session --host cursor",
+        "timeout": 10
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "node \"FRUGAL_DIR/hooks/frugal.js\" prompt --host cursor",
+        "timeout": 10
+      }
+    ]
+  }
+}

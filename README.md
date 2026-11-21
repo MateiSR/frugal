@@ -31,17 +31,43 @@ The benchmark numbers below were measured in Claude Code on Opus only. Other too
 | Tool | Delivery | Toggleable |
 | :--- | :--- | :--- |
 | Claude Code | Hooks (plugin) | Yes (`/frugal on\|off`) |
-| Gemini CLI | Static file (`gemini-extension.json` → `AGENTS.md`) | No (disable extension) |
-| Cursor, Windsurf, Cline, GitHub Copilot (VS Code), Kiro, Kilo Code, Qoder, Antigravity IDE | Static file (`node scripts/install.js`) | No |
-| Codex, OpenCode, Grok, Goose, Amp, Jules, Zed, Aider | Static file (`AGENTS.md` or `node scripts/install.js`) | No |
+| Codex CLI | Hooks (plugin) or static file (`~/.codex/AGENTS.md`) | Yes (hooks: `/frugal on\|off`) |
+| GitHub Copilot CLI | Hooks (plugin) | Session start (`frugal.js cli on\|off --host copilot`) |
+| Cursor | Hooks (`scripts/cursor-hooks.js`) or static file (`.mdc`) | Yes (hooks: `/frugal on\|off`) |
+| OpenCode | Extension (`.opencode/plugins/`) or static file (`AGENTS.md`) | Yes (extension: `/frugal on\|off`) |
+| Pi | Extension (`pi-extension/index.js`) | Yes (`/frugal on\|off`) |
+| Antigravity CLI (`agy`) | Plugin (`plugins/antigravity/`, always-on `rules/AGENTS.md`) | No (disable plugin) |
+| Gemini CLI | Extension (`gemini-extension.json` → `AGENTS.md`) | No (disable extension) |
+| Windsurf, Cline, GitHub Copilot (VS Code), Kiro, Kilo Code, Qoder, Antigravity IDE | Static file (`node scripts/install.js`) | No |
+| Grok, Goose, Amp, Jules, Zed, Aider | Static file (`AGENTS.md` or `node scripts/install.js`) | No |
 
-Install in Gemini CLI:
+Plugin / hook installs:
 
 ```bash
+# Codex CLI
+codex plugin marketplace add MateiSR/frugal
+codex plugin add frugal@frugal
+
+# GitHub Copilot CLI
+copilot plugin marketplace add MateiSR/frugal
+copilot plugin install frugal@frugal
+
+# Cursor hooks (merges into ~/.cursor/hooks.json; add --project for repo scope)
+node scripts/cursor-hooks.js install
+
+# Antigravity CLI
+agy plugin install https://github.com/MateiSR/frugal/tree/main/plugins/antigravity
+
+# Gemini CLI
 gemini extensions install https://github.com/MateiSR/frugal
+
+# Pi
+pi install git:github.com/MateiSR/frugal
 ```
 
-Install static rules into other tools (appends a marked block to existing files; `--uninstall` removes only what frugal added):
+For OpenCode, add `{"plugins": ["/path/to/frugal/.opencode/plugins"]}` to `opencode.json` (or `opencode` loads `.opencode/plugins/` from a checkout).
+
+Install static rules into editors and `AGENTS.md` tools (appends a marked block to existing files; `--uninstall` removes only what frugal added):
 
 ```bash
 node scripts/install.js --list

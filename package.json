@@ -1,0 +1,19 @@
+{
+  "name": "frugal",
+  "version": "0.7.0",
+  "description": "Write less code and shorter replies without cutting correctness.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MateiSR/frugal.git"
+  },
+  "main": "./.opencode/plugins/frugal.mjs",
+  "exports": {
+    ".": "./.opencode/plugins/frugal.mjs"
+  },
+  "pi": {
+    "extensions": [
+      "./pi-extension/index.js"
+    ]
+  }
+}

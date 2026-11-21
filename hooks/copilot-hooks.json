@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/hooks/frugal.js\" session --host copilot",
+        "powershell": "node \"$env:PLUGIN_ROOT/hooks/frugal.js\" session --host copilot",
+        "timeoutSec": 10
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": "node \"${PLUGIN_ROOT}/hooks/frugal.js\" prompt --host copilot",
+        "powershell": "node \"$env:PLUGIN_ROOT/hooks/frugal.js\" prompt --host copilot",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}

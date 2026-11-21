@@ -16,9 +16,15 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 - `rules/frugal.md` — the single source of truth for the rules text. Keep it short: every token here is paid in every session and subagent.
 - `AGENTS.md` — generated copy of `rules/frugal.md` for tools that read a root `AGENTS.md` (regenerate with `node scripts/build-rules.js`).
 - `gemini-extension.json` — Gemini CLI extension manifest pointing `contextFileName` at `AGENTS.md`.
-- `scripts/build-rules.js` — generates static rule copies from `rules/frugal.md` (`--check` fails on drift).
+- `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`, `hooks/codex-hooks.json` — Codex CLI plugin manifest, marketplace catalog, and lifecycle hooks.
+- `.github/plugin/plugin.json`, `.github/plugin/marketplace.json`, `hooks/copilot-hooks.json` — GitHub Copilot CLI plugin manifest, marketplace catalog, and lifecycle hooks.
+- `hooks/cursor-hooks.json`, `scripts/cursor-hooks.js` — Cursor hooks template and merger/uninstaller for `~/.cursor/hooks.json` (or `.cursor/hooks.json`).
+- `.opencode/plugins/frugal.mjs`, `.opencode/plugins/index.js` — OpenCode v1/v2 plugin reading `rules/frugal.md`.
+- `pi-extension/index.js`, `package.json` — Pi extension (`before_agent_start` + `/frugal`) and package metadata for OpenCode/Pi.
+- `plugins/antigravity/` — Antigravity CLI (`agy`) plugin with `plugin.json` and generated `rules/AGENTS.md`.
+- `scripts/build-rules.js` — generates static rule copies (`AGENTS.md`, `plugins/antigravity/rules/AGENTS.md`) from `rules/frugal.md` (`--check` fails on drift).
 - `scripts/install.js` — installs or removes static frugal rules (marked blocks) for Cursor, Windsurf, Cline, Copilot (VS Code), Kiro, Kilo, Qoder, Antigravity IDE, Codex, OpenCode, Grok, Goose and Amp.
-- `scripts/test-install.js` — tests `scripts/install.js` in a throwaway temporary home directory.
+- `scripts/test-install.js`, `scripts/test-hooks.js` — automated tests for the static installer, multi-tool hooks, Cursor hooks merger, OpenCode plugin, and Pi extension in throwaway temp directories.
 - `hooks/hooks.json` — registers `SessionStart`, `SubagentStart`, `UserPromptSubmit`.
 - `hooks/frugal.js` — all three hooks, the `/frugal` command and stats.
 - `skills/frugal/SKILL.md` — fallback for `/frugal` if the hook did not run.

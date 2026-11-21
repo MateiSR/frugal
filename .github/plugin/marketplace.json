@@ -1,0 +1,17 @@
+{
+  "name": "frugal",
+  "description": "Write less code and shorter replies without cutting correctness.",
+  "owner": {
+    "name": "MateiSR"
+  },
+  "plugins": [
+    {
+      "name": "frugal",
+      "description": "Write less code and shorter replies without cutting correctness.",
+      "source": "./",
+      "category": "productivity",
+      "tags": ["token-saving", "efficiency", "hooks", "minimalism"],
+      "hooks": "hooks/copilot-hooks.json"
+    }
+  ]
+}
