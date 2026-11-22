@@ -207,20 +207,20 @@ Restart Claude Code (2.1.296 or newer). That's it: frugal is on in every session
 
 ## Other tools
 
-The benchmark numbers above were measured in Claude Code on Opus only. Other tools receive the same rules file (`rules/frugal.md`) and are supported, but not benchmarked.
+The benchmark numbers above were measured in Claude Code on Opus only. Other tools receive the same rules file (`rules/frugal.md`); they are not benchmarked, and live smoke-test status is listed below.
 
-| Tool | Delivery | Toggleable |
-| :--- | :--- | :--- |
-| Claude Code | Hooks (plugin) | Yes (`/frugal on\|off`) |
-| Codex CLI | Hooks (plugin) or static file (`~/.codex/AGENTS.md`) | Yes (hooks: `/frugal on\|off`) |
-| GitHub Copilot CLI | Hooks (plugin) | Session start (`frugal.js cli on\|off --host copilot`) |
-| Cursor | Hooks (`scripts/cursor-hooks.js`) or static file (`.mdc`) | Yes (hooks: `/frugal on\|off`) |
-| OpenCode | Extension (`.opencode/plugins/`) or static file (`AGENTS.md`) | Yes (extension: `/frugal on\|off`) |
-| Pi | Extension (`pi-extension/index.js`) | Yes (`/frugal on\|off`) |
-| Antigravity CLI (`agy`) | Plugin (`plugins/antigravity/`, always-on `rules/AGENTS.md`) | No (disable plugin) |
-| Gemini CLI | Extension (`gemini-extension.json` → `AGENTS.md`) | No (disable extension) |
-| Windsurf, Cline, GitHub Copilot (VS Code), Kiro, Kilo Code, Qoder, Antigravity IDE | Static file (`node scripts/install.js`) | No |
-| Grok, Goose, Amp, Jules, Zed, Aider | Static file (`AGENTS.md` or `node scripts/install.js`) | No |
+| Tool | Delivery | Toggleable | Live smoke test |
+| :--- | :--- | :--- | :--- |
+| Claude Code | Hooks (plugin) | Yes (`/frugal on\|off`) | Tested (2026-11-26) |
+| Codex CLI | Hooks (plugin) or static file (`~/.codex/AGENTS.md`) | Yes (hooks: `/frugal on\|off`) | Tested (2026-11-26) |
+| GitHub Copilot CLI | Hooks (plugin) | Session start (`frugal.js cli on\|off --host copilot`) | Tested (2026-11-26) |
+| Cursor | Hooks (`scripts/cursor-hooks.js`) or static file (`.mdc`) | Yes (hooks: `/frugal on\|off`) | Untested (2026-11-26) |
+| OpenCode | Extension (`.opencode/plugins/`) or static file (`AGENTS.md`) | Yes (extension: `/frugal on\|off`) | Tested (2026-11-26) |
+| Pi | Extension (`pi-extension/index.js`) | Yes (`/frugal on\|off`) | Untested (2026-11-26) |
+| Antigravity CLI (`agy`) | Plugin (`plugins/antigravity/`, always-on `rules/AGENTS.md`) | No (disable plugin) | Tested (2026-11-26) |
+| Gemini CLI | Extension (`gemini-extension.json` → `AGENTS.md`) | No (disable extension) | Untested (2026-11-26) |
+| Windsurf, Cline, GitHub Copilot (VS Code), Kiro, Kilo Code, Qoder, Antigravity IDE | Static file (`node scripts/install.js`) | No | Untested (2026-11-26) |
+| Grok, Goose, Amp, Jules, Zed, Aider | Static file (`AGENTS.md` or `node scripts/install.js`) | No | Untested (2026-11-26) |
 
 Plugin / hook installs:
 
@@ -246,7 +246,7 @@ gemini extensions install https://github.com/MateiSR/frugal
 pi install git:github.com/MateiSR/frugal
 ```
 
-For OpenCode, add `{"plugins": ["/path/to/frugal/.opencode/plugins"]}` to `opencode.json` (or `opencode` loads `.opencode/plugins/` from a checkout).
+For OpenCode, add `{"plugin": ["file:///path/to/frugal/.opencode/plugins/frugal.mjs"]}` to `opencode.json` (or `opencode` loads `.opencode/plugins/` from a checkout).
 
 Install static rules into editors and `AGENTS.md` tools (appends a marked block to existing files; `--uninstall` removes only what frugal added):
 
