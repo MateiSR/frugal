@@ -11,7 +11,7 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 
 ## Layout
 
-- `.claude-plugin/plugin.json` — plugin manifest; the only place `version` is set.
+- `.claude-plugin/plugin.json` — plugin manifest. `version` is set here and repeated in the other tools' manifests and `package.json`; bump them together.
 - `.claude-plugin/marketplace.json` — marketplace manifest, plugin `source` is `./`.
 - `rules/frugal.md` — the single source of truth for the rules text. Keep it short: every token here is paid in every session and subagent.
 - `AGENTS.md` — generated copy of `rules/frugal.md` for tools that read a root `AGENTS.md` (regenerate with `node scripts/build-rules.js`).
