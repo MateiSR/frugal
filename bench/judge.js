@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Blind quality review of results already produced by bench/run.js. Makes one model call per task per pass.
-//   node bench/judge.js --out STAMP --from stamp,stamp [--arms off,v-mini,ponytail,honey] [--via claude|gemini] [--model opus] [--passes 2] [--dry]
+//   node bench/judge.js --out STAMP --from stamp,stamp [--arms off,v-mini,ponytail,honey] [--via claude|agy] [--model opus] [--passes 2] [--dry]
 // For each task, the first run of every arm (its reply and the files it wrote) is shown to the judge
 // under a shuffled letter, with no arm names. The judge scores each 1-10 on correctness, fit and reply,
 // then ranks them. Later stamps in --from override earlier ones for the same task and arm.
@@ -15,8 +15,8 @@ const arg = (name, fallback) => { const i = process.argv.indexOf('--' + name); r
 const out = path.join(__dirname, 'results', arg('out', ''));
 const arms = arg('arms', 'off,v-mini,ponytail,honey').split(',');
 const via = arg('via', 'claude');
-if (via !== 'claude' && via !== 'gemini') { console.error(`unknown --via ${via} (expected claude or gemini)`); process.exit(1); }
-const model = arg('model', via === 'gemini' ? 'gemini-2.5-pro' : 'opus');
+if (via !== 'claude' && via !== 'agy') { console.error(`unknown --via ${via} (expected claude or agy)`); process.exit(1); }
+const model = arg('model', via === 'agy' ? 'gemini-4-neon-high' : 'opus');
 const passes = Number(arg('passes', 2));
 
 const pick = {};
@@ -72,39 +72,23 @@ function askClaude(text) {
     });
   });
 }
-function askGemini(text) {
+function askAgy(text) {
   return new Promise((resolve) => {
-    // Run in an isolated temp dir with no extensions or context files so repo AGENTS.md and ~/.gemini/GEMINI.md cannot reach the judge.
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'frugal-judge-gemini-'));
-    const gdir = path.join(tmp, '.gemini');
-    fs.mkdirSync(gdir, { recursive: true });
-    const env = { ...process.env, GEMINI_CLI_HOME: tmp, GEMINI_SYSTEM_MD: '0' };
-    if (!env.GEMINI_API_KEY && !env.GOOGLE_API_KEY) {
-      const real = path.join(os.homedir(), '.gemini');
-      for (const f of ['oauth_creds.json', 'google_accounts.json']) {
-        const src = path.join(real, f);
-        if (fs.existsSync(src)) fs.copyFileSync(src, path.join(gdir, f));
-      }
-      fs.writeFileSync(path.join(gdir, 'settings.json'), JSON.stringify({ security: { auth: { selectedType: 'oauth-personal' } } }));
-    } else {
-      fs.writeFileSync(path.join(gdir, 'settings.json'), '{}');
-    }
-    const child = spawn('gemini', ['-p', text, '--model', model, '--output-format', 'json', '--extensions', 'none', '--skip-trust'], { cwd: tmp, env, stdio: ['ignore', 'pipe', 'ignore'] });
+    // An empty temp dir, so no project plugin or AGENTS.md reaches the judge.
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'frugal-judge-agy-'));
+    const child = spawn('agy', ['--model', model, '--output-format', 'json', '--disable-slash-commands', '-p', text], { cwd: tmp, stdio: ['ignore', 'pipe', 'ignore'] });
     let buf = '';
     child.stdout.on('data', (d) => { buf += d; });
     child.on('close', () => {
       fs.rmSync(tmp, { recursive: true, force: true });
       try {
-        const r = JSON.parse(buf.slice(buf.indexOf('{')));
-        const raw = typeof r.response === 'string' ? r.response : r.result;
-        const body = raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1);
-        const cost = typeof r.total_cost_usd === 'number' ? r.total_cost_usd : (typeof r.cost_usd === 'number' ? r.cost_usd : null);
-        resolve({ verdict: JSON.parse(body), cost_usd: cost });
+        const raw = JSON.parse(buf.slice(buf.indexOf('{'))).response;
+        resolve({ verdict: JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1)), cost_usd: null });
       } catch { resolve(null); }
     });
   });
 }
-const ask = (text) => (via === 'gemini' ? askGemini(text) : askClaude(text));
+const ask = (text) => (via === 'agy' ? askAgy(text) : askClaude(text));
 
 async function main() {
   if (!arg('out') || !arg('from')) { console.error('--out STAMP and --from stamp,stamp are required'); process.exit(1); }

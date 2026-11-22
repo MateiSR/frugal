@@ -67,7 +67,7 @@ node bench/run.js --stamp <name> --model opus --screen --arms off,on,v-<variant>
 node bench/run.js --stamp <date>-<model> --model sonnet --runs 3 --workers 6   # full run, about 15 minutes
 node bench/report.js <stamp>                      # free: re-render report.md from results.json
 node bench/judge.js --out <stamp> --from <stamp>,<stamp> --arms off,on,ponytail,honey --dry   # blind quality review of saved results; one call per task per pass
-node bench/judge.js --via gemini --model gemini-2.5-pro --out <stamp> --from <stamp>,<stamp> --arms off,on,ponytail,honey --dry   # second judge via Gemini CLI
+node bench/judge.js --via agy --out <stamp> --from <stamp>,<stamp> --arms off,on,ponytail,honey --dry   # second judge through the Antigravity CLI
 node bench/agree.js bench/results/<stamp-a>/judge.jsonl bench/results/<stamp-b>/judge.jsonl   # free: inter-judge rank agreement and Spearman correlation
 node bench/draw.js assets                         # free: redraw the README banner and charts (numbers are typed in at the top of the file)
 ```
@@ -76,14 +76,14 @@ node bench/draw.js assets                         # free: redraw the README bann
 - Arms are defined in `bench/run.js` (`ARMS`, `ARM_ENV`). To test a rules change, add a file under `bench/variants/` and an arm that points `FRUGAL_RULES` at it. The `full` arm does this for the long rules shipped before v0.4.
 - Finished sessions are cached in `bench/.cache/` (git-ignored), keyed by model, task, arm, what the arm injects (rules file and hook, or rival commit), CLI version and run number. Re-running a command reuses them, so a stopped run resumes and an edited variant costs only its own arm. Delete the directory to force fresh sessions.
 - A run that would start more than 20 new sessions stops unless you pass `--yes`. Screen variants first, then run the winner on all tasks, then 3 runs only for what ships.
-- `bench/judge.js` reads the first run of each arm from the stamps given (reply plus the files the session wrote), shows them to the judge under shuffled letters and appends each verdict to `judge.jsonl` in the `--out` stamp. Pass `--via gemini` (with `--model`, default `gemini-2.5-pro`) to run the same blind prompt and letter shuffle through headless `gemini` in an isolated temporary directory (`--extensions none`, `GEMINI_SYSTEM_MD=0`, `cost_usd: null`). Compare two judges with `bench/agree.js`. A rules change must be judged as well as measured: the 0.6 rules had the best savings and the worst review.
+- `bench/judge.js` reads the first run of each arm from the stamps given (reply plus the files the session wrote), shows them to the judge under shuffled letters and appends each verdict to `judge.jsonl` in the `--out` stamp. Pass `--via agy` (with `--model`, default `gemini-4-neon-high`) to send the same blind prompt and letter shuffle through `agy -p` in an empty temporary directory; it reports no cost, so `cost_usd` is null. Globally installed `agy` plugins and `~/.gemini/GEMINI.md` still load. Compare two judges with `bench/agree.js`. A rules change must be judged as well as measured: the 0.6 rules had the best savings and the worst review.
 - A stamp directory is never overwritten. Commit `results.json` and `report.md`; any number in the README must come from a committed stamp.
 - The method (paired medians, exact Wilcoxon test, arm-contamination check) is described at the top of `bench/report.js` and `bench/run.js`.
 
 ## Release
 
 1. Update `.claude/CLAUDE.md` and `docs/` per the table in `.claude/CLAUDE.md`.
-2. Bump `version` in `.claude-plugin/plugin.json` (semver). Do not add `version` to the marketplace entry.
+2. Bump `version` to the same value in `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `.github/plugin/plugin.json`, `plugins/antigravity/plugin.json`, `gemini-extension.json` and `package.json` (semver). Do not add `version` to a marketplace entry.
 3. `claude plugin validate .`
 4. Commit and push to `main`.
 5. On each machine: `claude plugin update frugal@frugal`, then `/reload-plugins` in open sessions.
