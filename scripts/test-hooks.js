@@ -208,6 +208,11 @@ async function main() {
         const mod = await import(pathToFileURL(path.join(ROOT, '.opencode', 'plugins', 'index.js')).href);
         // V1
         const v1 = await mod.FrugalPlugin();
+        assert.strictEqual(typeof v1.config, 'function', 'OpenCode plugin must register /frugal via config hook');
+        const cfg = {};
+        await v1.config(cfg);
+        assert.ok(cfg.command && cfg.command.frugal && cfg.command.frugal.template, 'config hook must register command.frugal');
+
         const out1 = { system: [] };
         await v1['experimental.chat.system.transform']({}, out1);
         assert.deepStrictEqual(out1.system, [RULES]);

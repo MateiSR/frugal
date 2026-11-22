@@ -43,6 +43,14 @@ function handleToggle(rawArgs) {
 
 // OpenCode v1 plugin export (callable function).
 export const FrugalPlugin = async () => ({
+  config: async (cfg) => {
+    if (!cfg || typeof cfg !== 'object') return;
+    cfg.command = cfg.command || {};
+    cfg.command.frugal = {
+      description: 'Toggle frugal mode (on|off|status)',
+      template: 'Frugal command ($ARGUMENTS) ran. Confirm in one short line.',
+    };
+  },
   'experimental.chat.system.transform': async (_input, output) => {
     if (readMode() === 'off') return;
     const text = rulesText();
