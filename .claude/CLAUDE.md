@@ -31,7 +31,7 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 - `skills/orchestrate/SKILL.md` — the orchestrator's instructions.
 - `skills/debug/SKILL.md` — root-cause method for a bug that survived two fixes.
 - `agents/*.md` — `stream-worker`, `researcher`, `visual-verifier`, `reviewer`.
-- `bench/` — on-versus-off benchmark: `tasks.js`, `run.js`, `report.js`, `judge.js` (blind quality review), `draw.js` (README images), `variants/`, committed `results/<stamp>/`.
+- `bench/` — on-versus-off benchmark: `tasks.js`, `run.js`, `report.js`, `judge.js` (blind quality review), `agree.js` (inter-judge agreement), `draw.js` (README images), `variants/`, committed `results/<stamp>/`.
 - `templates/` — optional files users copy by hand.
 - `assets/` — README images: `banner.svg` and the light and dark benchmark charts. Their numbers are typed in by hand; redraw them when the README table changes.
 - `docs/` — reference for people and agents working on this repo; not loaded by the plugin.
