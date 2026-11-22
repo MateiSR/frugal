@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // On-versus-off benchmark for frugal mode, using real headless Claude Code sessions.
 //   node bench/run.js --selftest                      free: check every test against its reference
-//   node bench/run.js --stamp NAME [--model sonnet] [--runs 3] [--workers 4] [--screen] [--dry] [--yes]
+//   node bench/run.js --stamp NAME [--model sonnet] [--runs 3] [--workers 4] [--screen] [--multi] [--dry] [--yes]
 //                     [--arms off,terse,on,full,caveman,ponytail,honey,v-<variant>] [--rivals DIR] [--tasks id,id] [--api-key]
 // Each cell = one task x one arm x one run, in a fresh empty workspace.
+// With --multi, runs the scripted multi-turn conversations from bench/conversations.js (arms default to off,on).
 // Finished cells are cached in bench/.cache/, keyed by model, task, arm, what the arm injects and the CLI version,
 // so a stopped run resumes with the same command and an edited variant re-runs only its own arm.
 // --screen: 1 run of the eight tasks where code size varies most. For discarding variants; never quote its numbers.
@@ -15,6 +16,7 @@ const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 const crypto = require('crypto');
 const TASKS = require('./tasks');
+const CONVERSATIONS = require('./conversations');
 
 const ROOT = path.join(__dirname, '..');
 const argv = (name, fallback) => { const i = process.argv.indexOf('--' + name); return i < 0 ? fallback : process.argv[i + 1]; };
@@ -40,7 +42,7 @@ const armEnv = (arm) => ARM_ENV[arm] || (arm.startsWith('v-') ? { FRUGAL_RULES: 
 const isFrugal = (arm) => ['on', 'full'].includes(arm) || arm.startsWith('v-');
 const TIMEOUT_MS = 300000;
 const SCREEN = ['pt-email', 'pt-debounce', 'pt-csv', 'pt-countdown', 'pt-ratelimit', 'safe-join', 'cache', 'hn-lru-cache'];
-const CACHE = path.join(__dirname, '.cache');
+const CACHE = process.env.FRUGAL_BENCH_CACHE || path.join(__dirname, '.cache');
 const sha = (...xs) => crypto.createHash('sha1').update(JSON.stringify(xs)).digest('hex').slice(0, 16);
 const read = (p) => { try { return fs.readFileSync(p, 'utf8'); } catch { return ''; } };
 const rivalCommit = (n) => spawnSync('git', ['-C', path.join(RIVALS, n), 'rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
@@ -89,6 +91,10 @@ function grade(task, dir, reply) {
   return spawnSync('python3', ['_bench_test.py'], { cwd: dir, timeout: 30000 }).status === 0;
 }
 
+function gradeConversation(conv, dir) {
+  try { return Boolean(conv.check(dir)); } catch { return false; }
+}
+
 function selftest() {
   let bad = 0;
   for (const task of TASKS.filter((t) => t.test)) {
@@ -100,7 +106,112 @@ function selftest() {
     console.log(`${ok ? 'ok  ' : 'FAIL'} ${task.id}${starterPasses ? ' (starter file already passes)' : ''}`);
     fs.rmSync(dir, { recursive: true, force: true });
   }
+  for (const conv of CONVERSATIONS) {
+    const dir = workspace(conv);
+    const emptyPasses = gradeConversation(conv, dir);
+    for (const [name, content] of Object.entries(conv.reference)) {
+      const p = path.join(dir, name);
+      fs.mkdirSync(path.dirname(p), { recursive: true });
+      fs.writeFileSync(p, content);
+    }
+    const ok = gradeConversation(conv, dir) && !emptyPasses;
+    if (!ok) bad++;
+    console.log(`${ok ? 'ok  ' : 'FAIL'} multi:${conv.id}${emptyPasses ? ' (empty workspace already passes)' : ''}`);
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
   process.exit(bad ? 1 : 0);
+}
+
+function runTurn(promptText, { dir, model, arm, env, frugalDir, claudeDir, sessionId }) {
+  return new Promise((resolve) => {
+    const started = Date.now();
+    const args = ['-p', promptText, '--model', model, '--output-format', 'json',
+      '--setting-sources', 'project', '--strict-mcp-config',
+      '--permission-mode', 'acceptEdits', '--tools', 'Read,Edit,Write,Glob,Grep', ...armArgs(arm)];
+    if (sessionId) args.push('--resume', sessionId);
+    const child = spawn('claude', args, {
+      cwd: dir,
+      env: { ...env, FRUGAL_DIR: frugalDir, CLAUDE_CONFIG_DIR: claudeDir, ...armEnv(arm) },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let out = '';
+    child.stdout.on('data', (d) => { out += d; });
+    const timer = setTimeout(() => child.kill('SIGKILL'), TIMEOUT_MS);
+    child.on('close', () => {
+      clearTimeout(timer);
+      const wall_ms = Date.now() - started;
+      try {
+        const r = JSON.parse(out.slice(out.indexOf('{')));
+        const u = r.usage || {};
+        resolve({
+          ok: !r.is_error && r.stop_reason !== 'refusal',
+          session_id: r.session_id || sessionId || null,
+          stop_reason: r.stop_reason,
+          num_turns: r.num_turns,
+          duration_ms: r.duration_ms,
+          wall_ms,
+          cost_usd: r.total_cost_usd || 0,
+          input: u.input_tokens || 0,
+          cache_write: u.cache_creation_input_tokens || 0,
+          cache_read: u.cache_read_input_tokens || 0,
+          output: u.output_tokens || 0,
+          reply: r.result || '',
+        });
+      } catch (e) {
+        resolve({ ok: false, wall_ms, error: String(e.message || e).slice(0, 200) });
+      }
+    });
+  });
+}
+
+async function runMultiCell(cell, model, env) {
+  const { conv, arm } = cell;
+  const dir = workspace(conv);
+  const frugalDir = path.join(dir, '.frugal-state');
+  // Resuming requires session persistence, so redirect Claude config/sessions into a temp dir and delete it on exit.
+  const claudeDir = path.join(dir, '.claude-config');
+  fs.mkdirSync(claudeDir, { recursive: true });
+  const realClaude = env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+  const creds = path.join(realClaude, '.credentials.json');
+  try { if (fs.existsSync(creds)) fs.copyFileSync(creds, path.join(claudeDir, '.credentials.json')); } catch {}
+
+  const started = Date.now();
+  const per_turn = [];
+  let sessionId = null;
+  let ok = true;
+  let error = null;
+
+  for (let i = 0; i < conv.prompts.length; i++) {
+    const t = await runTurn(conv.prompts[i], { dir, model, arm, env, frugalDir, claudeDir, sessionId });
+    per_turn.push({ turn: i + 1, ...t });
+    if (!t.ok) { ok = false; error = t.error || t.stop_reason || 'turn failed'; break; }
+    if (!sessionId) sessionId = t.session_id;
+    if (!sessionId && i < conv.prompts.length - 1) { ok = false; error = 'missing session_id on turn 1'; break; }
+  }
+
+  let hookLog = '';
+  try { hookLog = fs.readFileSync(path.join(frugalDir, 'log.jsonl'), 'utf8'); } catch {}
+  const sum = (k) => per_turn.reduce((s, t) => s + (t[k] || 0), 0);
+  const lastReply = per_turn.length ? (per_turn[per_turn.length - 1].reply || '') : '';
+  const rec = {
+    task: conv.id, kind: 'multi', arm, run: cell.run, session_id: sessionId, ok,
+    turns: per_turn.length,
+    cost_usd: sum('cost_usd'),
+    input: sum('input'),
+    cache_write: sum('cache_write'),
+    cache_read: sum('cache_read'),
+    output: sum('output'),
+    loc_all: allLines(conv, dir, lastReply),
+    wall_ms: Date.now() - started,
+    files: written(conv, dir),
+    hook_fired: /"ev":"session","mode":"on"/.test(hookLog),
+    per_turn,
+  };
+  if (error) rec.error = error;
+  rec.pass = rec.ok && gradeConversation(conv, dir);
+  rec.arm_ok = rec.hook_fired === isFrugal(arm);
+  fs.rmSync(dir, { recursive: true, force: true });
+  return rec;
 }
 
 function runCell(cell, model, env) {
@@ -151,36 +262,50 @@ function runCell(cell, model, env) {
 
 async function main() {
   if (flag('selftest')) return selftest();
+  const multi = flag('multi');
   const stamp = arg('stamp');
-  if (!stamp) { console.error('--stamp NAME is required'); process.exit(1); }
-  const out = path.join(__dirname, 'results', stamp);
-  if (fs.existsSync(path.join(out, 'results.json'))) { console.error(`${out} already has results; pick a new --stamp`); process.exit(1); }
+  if (!stamp && !(multi && flag('dry'))) { console.error('--stamp NAME is required'); process.exit(1); }
+  const out = stamp ? path.join(__dirname, 'results', stamp) : null;
+  if (out && fs.existsSync(path.join(out, 'results.json'))) { console.error(`${out} already has results; pick a new --stamp`); process.exit(1); }
   const model = arg('model', 'sonnet');
-  const runs = Number(arg('runs', flag('screen') ? 1 : 3));
-  const arms = arg('arms', 'off,terse,on,full').split(',');
+  const runs = Number(arg('runs', multi || flag('screen') ? 1 : 3));
+  const arms = arg('arms', multi ? 'off,on' : 'off,terse,on,full').split(',');
   for (const a of arms) if (!armArgs(a)) { console.error(`unknown arm ${a}`); process.exit(1); }
-  const only = arg('tasks') ? arg('tasks').split(',') : flag('screen') ? SCREEN : null;
-  const tasks = TASKS.filter((t) => !only || only.includes(t.id));
+  const only = arg('tasks') ? arg('tasks').split(',') : (!multi && flag('screen') ? SCREEN : null);
   const env = { ...process.env };
   // Default to the Claude subscription login; an API key in the environment would be billed per token.
   if (!flag('api-key')) delete env.ANTHROPIC_API_KEY;
 
   const cells = [];
-  for (const task of tasks) for (const a of arms) for (let run = 1; run <= runs; run++) cells.push({ task, arm: a, run });
+  if (multi) {
+    const convs = CONVERSATIONS.filter((c) => !only || only.includes(c.id));
+    for (const conv of convs) for (const a of arms) for (let run = 1; run <= runs; run++) cells.push({ conv, arm: a, run });
+  } else {
+    const tasks = TASKS.filter((t) => !only || only.includes(t.id));
+    for (const task of tasks) for (const a of arms) for (let run = 1; run <= runs; run++) cells.push({ task, arm: a, run });
+  }
   const version = spawnSync('claude', ['--version'], { encoding: 'utf8' }).stdout.trim();
   const hashes = Object.fromEntries(arms.map((a) => [a, armHash(a)]));
   const results = [];
   for (const c of cells) {
-    c.key = sha(model, c.task.id, sha(c.task.prompt, c.task.files, c.task.test, c.task.facts), c.arm, hashes[c.arm], version, c.run);
+    c.key = multi
+      ? sha('multi', model, c.conv.id, sha(c.conv.prompts, c.conv.files), c.arm, hashes[c.arm], version, c.run)
+      : sha(model, c.task.id, sha(c.task.prompt, c.task.files, c.task.test, c.task.facts), c.arm, hashes[c.arm], version, c.run);
     const hit = cached(c.key);
     if (hit) results.push(hit);
   }
   const todo = cells.filter((c) => !cached(c.key));
+  const newSessions = multi ? todo.reduce((s, c) => s + c.conv.prompts.length, 0) : todo.length;
   const known = fs.existsSync(CACHE) ? fs.readdirSync(CACHE).map((f) => cached(f.slice(0, -5))).filter((r) => r && r.model === model && r.cost_usd) : [];
   const each = known.length ? known.reduce((s, r) => s + r.cost_usd, 0) / known.length : null;
-  console.log(`${todo.length} new sessions on ${model} (${results.length} reused from cache)${each ? `, about $${(each * todo.length).toFixed(2)} list price` : ''}`);
+  if (multi) {
+    console.log(`Multi-turn plan on ${model}: ${todo.length} conversation(s) (${results.length} reused from cache), ${newSessions} new turn-sessions`);
+    for (const c of todo) console.log(`  - ${c.conv.id} [${c.arm}] #${c.run}: ${c.conv.prompts.length} turns`);
+  } else {
+    console.log(`${todo.length} new sessions on ${model} (${results.length} reused from cache)${each ? `, about $${(each * todo.length).toFixed(2)} list price` : ''}`);
+  }
   if (flag('dry')) return;
-  if (todo.length > 20 && !flag('yes')) { console.error('More than 20 new sessions: re-run with --yes to start.'); process.exit(1); }
+  if (newSessions > 20 && !flag('yes')) { console.error('More than 20 new sessions: re-run with --yes to start.'); process.exit(1); }
   todo.sort(() => Math.random() - 0.5); // interleave arms so time-of-day and cache effects spread evenly
   // Pre-flight: every plugin arm must show its instructions actually reached the model.
   const probes = {};
@@ -189,6 +314,7 @@ async function main() {
     if (hit || !todo.some((c) => c.arm === a)) { probes[a] = hit; continue; }
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'frugal-bench-probe-'));
     const r = spawnSync('claude', ['-p', 'Without calling tools: quote the first 12 words of any hook-injected instructions you were given at session start, or reply NONE.', '--model', 'haiku', '--output-format', 'json', '--setting-sources', 'project', '--strict-mcp-config', '--no-session-persistence', ...armArgs(a)], { cwd: dir, env: { ...env, FRUGAL_DIR: path.join(dir, '.f'), ...armEnv(a) }, encoding: 'utf8', timeout: 120000 });
+    fs.rmSync(dir, { recursive: true, force: true });
     let reply = '';
     try { reply = JSON.parse(r.stdout.slice(r.stdout.indexOf('{'))).result || ''; } catch {}
     probes[a] = reply.replace(/\s+/g, ' ').slice(0, 160);
@@ -201,8 +327,8 @@ async function main() {
   const worker = async () => {
     while (next < todo.length) {
       const cell = todo[next++];
-      let rec = await runCell(cell, model, env);
-      if (!rec.ok) rec = await runCell(cell, model, env); // one retry for transient API errors
+      let rec = multi ? await runMultiCell(cell, model, env) : await runCell(cell, model, env);
+      if (!rec.ok) rec = multi ? await runMultiCell(cell, model, env) : await runCell(cell, model, env); // one retry for transient API errors
       rec.model = model;
       if (rec.ok) store(cell.key, rec);
       results.push(rec);
@@ -213,7 +339,7 @@ async function main() {
 
   const commit = spawnSync('git', ['-C', ROOT, 'rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
   fs.mkdirSync(out, { recursive: true });
-  fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify({ meta: { stamp, model, runs, arms, date: new Date().toISOString(), claude: version, commit, probes, rivals: Object.fromEntries(['caveman', 'ponytail', 'honey-for-devs'].filter((n) => arms.some((a) => (armArgs(a) || []).join().includes(n))).map((n) => [n, rivalCommit(n)])), rules_chars: fs.readFileSync(path.join(ROOT, 'rules', 'frugal.md'), 'utf8').length }, results }, null, 1));
+  fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify({ meta: { stamp, multi, model, runs, arms, date: new Date().toISOString(), claude: version, commit, probes, rivals: Object.fromEntries(['caveman', 'ponytail', 'honey-for-devs'].filter((n) => arms.some((a) => (armArgs(a) || []).join().includes(n))).map((n) => [n, rivalCommit(n)])), rules_chars: fs.readFileSync(path.join(ROOT, 'rules', 'frugal.md'), 'utf8').length }, results }, null, 1));
   console.log(`\nWrote ${path.join(out, 'results.json')}. Render with: node bench/report.js ${stamp}`);
 }
 

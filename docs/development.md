@@ -17,6 +17,7 @@ node scripts/build-rules.js          # regenerate static rule copies
 node scripts/build-rules.js --check  # verify copies match rules/frugal.md (exits non-zero on drift)
 node scripts/test-install.js         # test scripts/install.js in a temporary HOME/XDG dir
 node scripts/test-hooks.js           # test hooks (Claude, Codex, Copilot, Cursor), Cursor merger, OpenCode, Pi
+node scripts/test-bench-multi.js     # test multi-turn benchmark loop with a stub claude executable
 agy plugin validate plugins/antigravity --strict
 gemini extensions validate .
 ```
@@ -57,7 +58,9 @@ The orchestration flow has no automated test. To exercise it, run `/frugal:orche
 ## Benchmark
 
 ```bash
-node bench/run.js --selftest                      # free: every test must pass its reference solution and fail its starter
+node bench/run.js --selftest                      # free: every test (single-turn and multi-turn) must pass its reference solution and fail its starter
+node bench/run.js --multi --dry --model opus      # free: print multi-turn conversation plan and turn-session count
+node bench/run.js --multi --stamp <name> --model opus --arms off,on --yes   # multi-turn tier (bench/conversations.js); counts each turn against the 20-session guard
 node bench/run.js --stamp smoke --model haiku --runs 1 --tasks flatten,cache   # cheap wiring check; never quote it
 node bench/run.js --stamp <name> --model opus --screen --arms off,on,v-<variant> --dry   # free: print how many new sessions it would start
 node bench/run.js --stamp <name> --model opus --screen --arms off,on,v-<variant>         # screening: 1 run of 8 tasks per arm; never quote it

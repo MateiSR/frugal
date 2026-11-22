@@ -24,14 +24,14 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 - `plugins/antigravity/` — Antigravity CLI (`agy`) plugin with `plugin.json` and generated `rules/AGENTS.md`.
 - `scripts/build-rules.js` — generates static rule copies (`AGENTS.md`, `plugins/antigravity/rules/AGENTS.md`) from `rules/frugal.md` (`--check` fails on drift).
 - `scripts/install.js` — installs or removes static frugal rules (marked blocks) for Cursor, Windsurf, Cline, Copilot (VS Code), Kiro, Kilo, Qoder, Antigravity IDE, Codex, OpenCode, Grok, Goose and Amp.
-- `scripts/test-install.js`, `scripts/test-hooks.js` — automated tests for the static installer, multi-tool hooks, Cursor hooks merger, OpenCode plugin, and Pi extension in throwaway temp directories.
+- `scripts/test-install.js`, `scripts/test-hooks.js`, `scripts/test-bench-multi.js` — automated tests for the static installer, multi-tool hooks, Cursor hooks merger, OpenCode plugin, Pi extension, and multi-turn benchmark loop in throwaway temp directories.
 - `hooks/hooks.json` — registers `SessionStart`, `SubagentStart`, `UserPromptSubmit`.
 - `hooks/frugal.js` — all three hooks, the `/frugal` command and stats.
 - `skills/frugal/SKILL.md` — fallback for `/frugal` if the hook did not run.
 - `skills/orchestrate/SKILL.md` — the orchestrator's instructions.
 - `skills/debug/SKILL.md` — root-cause method for a bug that survived two fixes.
 - `agents/*.md` — `stream-worker`, `researcher`, `visual-verifier`, `reviewer`.
-- `bench/` — on-versus-off benchmark: `tasks.js`, `run.js`, `report.js`, `judge.js` (blind quality review), `agree.js` (inter-judge agreement), `draw.js` (README images), `variants/`, committed `results/<stamp>/`.
+- `bench/` — on-versus-off benchmark: `tasks.js`, `conversations.js` (multi-turn tier), `run.js`, `report.js`, `judge.js` (blind quality review), `agree.js` (inter-judge agreement), `draw.js` (README images), `variants/`, committed `results/<stamp>/`.
 - `templates/` — optional files users copy by hand.
 - `assets/` — README images: `banner.svg` and the light and dark benchmark charts. Their numbers are typed in by hand; redraw them when the README table changes.
 - `docs/` — reference for people and agents working on this repo; not loaded by the plugin.
