@@ -50,7 +50,7 @@ Minimum Claude Code version for the plugin as a whole: **v2.1.296**.
 
 - `claude plugin update <plugin>@<marketplace>` is shell-only; there is no `/plugin update` inside a session.
 - `/reload-plugins` applies changed plugins to a running session.
-- Multi-turn headless sessions: run turn 1 with `claude -p <prompt> --output-format json` (without `--no-session-persistence`), read `session_id` from the JSON result, and pass `--resume <session_id>` on subsequent turns in the same working directory. Pointing `CLAUDE_CONFIG_DIR` at a temporary directory keeps persisted session transcripts isolated so they can be removed cleanly. Sources: [Run Claude Code programmatically](https://code.claude.com/docs/en/headless) and [CLI reference](https://code.claude.com/docs/en/cli-reference) (checked 2026-11-26).
+- Multi-turn headless sessions: run turn 1 with `claude -p <prompt> --output-format json` (without `--no-session-persistence`), read `session_id` from the JSON result, and pass `--resume <session_id>` on subsequent turns in the same working directory. The transcript is saved as `projects/<cwd slug>/<session_id>.jsonl` under the config directory; `bench/run.js` deletes that file afterwards. Each call's `total_cost_usd` and `usage` cover that call only, not the session so far (checked with two Haiku calls on 2.1.332, 2026-11-26). Sources: [Run Claude Code programmatically](https://code.claude.com/docs/en/headless) and [CLI reference](https://code.claude.com/docs/en/cli-reference) (checked 2026-11-26).
 
 ## Hooks
 

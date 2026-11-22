@@ -122,7 +122,7 @@ function selftest() {
   process.exit(bad ? 1 : 0);
 }
 
-function runTurn(promptText, { dir, model, arm, env, frugalDir, claudeDir, sessionId }) {
+function runTurn(promptText, { dir, model, arm, env, frugalDir, sessionId }) {
   return new Promise((resolve) => {
     const started = Date.now();
     const args = ['-p', promptText, '--model', model, '--output-format', 'json',
@@ -131,7 +131,7 @@ function runTurn(promptText, { dir, model, arm, env, frugalDir, claudeDir, sessi
     if (sessionId) args.push('--resume', sessionId);
     const child = spawn('claude', args, {
       cwd: dir,
-      env: { ...env, FRUGAL_DIR: frugalDir, CLAUDE_CONFIG_DIR: claudeDir, ...armEnv(arm) },
+      env: { ...env, FRUGAL_DIR: frugalDir, ...armEnv(arm) },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let out = '';
@@ -168,13 +168,6 @@ async function runMultiCell(cell, model, env) {
   const { conv, arm } = cell;
   const dir = workspace(conv);
   const frugalDir = path.join(dir, '.frugal-state');
-  // Resuming requires session persistence, so redirect Claude config/sessions into a temp dir and delete it on exit.
-  const claudeDir = path.join(dir, '.claude-config');
-  fs.mkdirSync(claudeDir, { recursive: true });
-  const realClaude = env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
-  const creds = path.join(realClaude, '.credentials.json');
-  try { if (fs.existsSync(creds)) fs.copyFileSync(creds, path.join(claudeDir, '.credentials.json')); } catch {}
-
   const started = Date.now();
   const per_turn = [];
   let sessionId = null;
@@ -182,12 +175,16 @@ async function runMultiCell(cell, model, env) {
   let error = null;
 
   for (let i = 0; i < conv.prompts.length; i++) {
-    const t = await runTurn(conv.prompts[i], { dir, model, arm, env, frugalDir, claudeDir, sessionId });
+    const t = await runTurn(conv.prompts[i], { dir, model, arm, env, frugalDir, sessionId });
     per_turn.push({ turn: i + 1, ...t });
     if (!t.ok) { ok = false; error = t.error || t.stop_reason || 'turn failed'; break; }
     if (!sessionId) sessionId = t.session_id;
     if (!sessionId && i < conv.prompts.length - 1) { ok = false; error = 'missing session_id on turn 1'; break; }
   }
+
+  // Resuming needs the session saved, under the login's own config directory; remove only this session's transcript.
+  const projects = path.join(env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'projects');
+  if (sessionId) try { for (const d of fs.readdirSync(projects)) fs.rmSync(path.join(projects, d, sessionId + '.jsonl'), { force: true }); } catch {}
 
   let hookLog = '';
   try { hookLog = fs.readFileSync(path.join(frugalDir, 'log.jsonl'), 'utf8'); } catch {}

@@ -96,6 +96,7 @@ process.stdout.write(JSON.stringify({
 `;
 
   fs.writeFileSync(path.join(binDir, 'claude'), stub, { mode: 0o755 });
+  const configDir = fs.mkdtempSync(path.join(os.tmpdir(), 'frugal-multi-config-'));
   const stamp = `../.tmp-multi-test-${process.pid}`;
   const outDir = path.join(ROOT, 'bench', 'results', stamp);
 
@@ -104,6 +105,7 @@ process.stdout.write(JSON.stringify({
     PATH: binDir + path.delimiter + process.env.PATH,
     ANTHROPIC_API_KEY: 'sk-ant-should-be-stripped',
     FRUGAL_BENCH_CACHE: cacheDir,
+    CLAUDE_CONFIG_DIR: configDir,
   };
 
   try {
@@ -143,8 +145,9 @@ process.stdout.write(JSON.stringify({
       const t1 = armTurns[0];
       assert.strictEqual(t1.resumed, null, 'turn 1 must start a fresh session without --resume');
       assert.ok(!t1.args.includes('--no-session-persistence'), 'multi-turn must not pass --no-session-persistence');
-      assert.ok(t1.claudeConfigDir && t1.claudeConfigDir.startsWith(t1.cwd), 'session persistence must live in a temporary dir inside workspace');
-      assert.ok(!fs.existsSync(t1.cwd), 'workspace and temp session dir must be cleaned up after completion');
+      assert.strictEqual(t1.claudeConfigDir, configDir, 'the login config directory must be passed through, not replaced by a copy');
+      assert.ok(!fs.existsSync(path.join(configDir, 'projects', 'tmp', t1.sid + '.jsonl')), 'the session transcript must be removed after completion');
+      assert.ok(!fs.existsSync(t1.cwd), 'workspace must be cleaned up after completion');
       for (let i = 1; i < 5; i++) {
         assert.strictEqual(armTurns[i].resumed, t1.sid, `turn ${i + 1} must --resume turn 1 session_id`);
         assert.strictEqual(armTurns[i].cwd, t1.cwd, `turn ${i + 1} must run in the same working directory`);
@@ -182,6 +185,7 @@ process.stdout.write(JSON.stringify({
     console.log('ok   cell cache reuses completed multi-turn conversations');
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
+    fs.rmSync(configDir, { recursive: true, force: true });
     fs.rmSync(outDir, { recursive: true, force: true });
   }
 }
