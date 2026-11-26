@@ -62,6 +62,7 @@ Source: [hooks reference](https://code.claude.com/docs/en/hooks).
 - `SessionStart`: `source` is `startup`, `resume`, `clear`, `compact` or `fork`, and is also the matcher value. Context via plain stdout or `hookSpecificOutput.additionalContext`.
 - `SubagentStart`: stdin has `agent_id` and `agent_type`; the matcher is a regex on the agent type. Context must use the JSON `hookSpecificOutput.additionalContext` form. It cannot block the subagent.
 - `UserPromptSubmit`: stdin has `prompt`, the line as typed (a slash command is not expanded). `{"decision": "block", "reason": "..."}` stops the prompt and shows the reason to the user; a blocked slash command does not run.
+- `PostToolUse`: stdin has `tool_input` and `tool_response`; for Bash the response is an object with `stdout`, `stderr`, `interrupted` and `isImage`. `hookSpecificOutput.updatedToolOutput` replaces what Claude sees for any tool, built-in ones included (v2.1.121+, per the changelog); the value must match the tool's output shape or it is ignored and the original is used. `additionalContext` adds to the result and does not replace it. `PostToolUseFailure` accepts only `additionalContext`. The plugin does not register this hook.
 - `additionalContext` is capped at 10,000 characters; larger text is saved to a file and Claude gets the path plus a 2,000-character preview.
 - `PreCompact` and `PostCompact` exist but cannot inject context; `SessionStart` with `compact` is the way to re-inject.
 - No hook input carries token usage, apart from narrow cases. The transcript JSONL format is not documented.
