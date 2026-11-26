@@ -41,20 +41,22 @@ Median change per task against default Claude Code; code lines are the total ove
 
 ### Quality
 
-The same outputs, shown to a judge with the names removed and the order shuffled. It scored each from 1 to 10 and ranked the four. 23 tasks, two passes each.
+The same outputs, shown to a judge with the names removed and the order shuffled. It scored each from 1 to 10 and ranked the four. 23 tasks, two passes each. The judge was Opus; the last column is the mean rank from a second judge, Gemini 4 Neon, given the same prompts.
 
-| | Correctness | Fit to the request | Reply | Mean rank (1 is best) | Ranked best | Ranked last |
-| :--- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Default Claude Code | 8.6 | 8.3 | 8.2 | 2.09 | 16 | 6 |
-| **frugal 0.7** | **8.9** | **8.7** | **8.3** | **2.04** | **21** | 6 |
-| Ponytail 5.3.3 | 8.5 | 8.2 | 8.2 | 2.61 | 9 | 13 |
-| Honey 1.4.0 | 8.3 | 8.5 | 7.7 | 3.26 | 0 | 21 |
+| | Correctness | Fit to the request | Reply | Mean rank (1 is best) | Ranked best | Ranked last | Mean rank, Gemini |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Default Claude Code | 8.6 | 8.3 | 8.2 | 2.09 | 16 | 6 | 2.33 |
+| **frugal 0.7** | **8.9** | **8.7** | **8.3** | **2.04** | **21** | 6 | **1.96** |
+| Ponytail 5.3.3 | 8.5 | 8.2 | 8.2 | 2.61 | 9 | 13 | 2.98 |
+| Honey 1.4.0 | 8.3 | 8.5 | 7.7 | 3.26 | 0 | 21 | 2.74 |
 
 Task by task, frugal was ranked above Honey on 18 of 23 (p = 0.004), above Ponytail on 14 of 23 (not significant) and above default Claude Code on 11, below on 9, level on 3 (not significant).
 
+The second judge also put frugal first and level with default Claude Code (above on 13 of 23, below on 9, not significant), but it swapped the other two: frugal above Ponytail on 17 of 23 (p = 0.007) and above Honey on 15 of 23 (not significant). The two judges picked the same best output in 32 of 46 comparisons.
+
 What the numbers say:
 
-- frugal and Honey cut the same amount of code, less than half of what default Claude Code writes. Honey is a little ahead on output tokens and cost; frugal is well ahead on quality.
+- frugal and Honey cut the same amount of code, less than half of what default Claude Code writes. Honey is a little ahead on output tokens and cost; frugal is ahead on quality, clearly for one judge and not significantly for the other.
 - frugal's quality is level with default Claude Code. That is the point: a third less output, with nothing a reviewer misses.
 - Session cost does not move. Output is a small share of what a session bills; most of it is input and cache, and frugal's rules add about 9% to the uncached input. On open-ended requests, where default Claude Code over-builds most, the saving is real: on the eight tasks where code size varies most, frugal cut cost by 19%, output by 46% and code lines by 57% (Honey −25%, −50%, −43%; Ponytail's changes there are not significant).
 - Savings and quality trade off. An earlier, shorter version of the rules (0.6) saved more (−40% output, −6% cost) and was ranked last in the same review, for thin replies and looser code. The rules now ask for the edge cases a careful reviewer expects and for up to three lines on what was assumed or left out.
@@ -69,7 +71,7 @@ What the numbers say:
 - The eight tasks where code size varies most ran 3 times per arm and the other 15 once, to limit the number of sessions. Runs of a task are collapsed by median before comparing.
 - Checks are unit tests for code tasks, required facts for explanations and "produced code" for the open-ended prompts. One of the unit-tested tasks is a path-traversal guard that is implied but not asked for.
 - Code lines are the non-blank, non-comment lines in every file the session wrote or changed, or the code blocks in its reply if it wrote no file. Cost is Claude Code's own `total_cost_usd`, so it includes the tokens each plugin injects.
-- The quality judge is one Opus call per task per pass, with no tools. It sees the request, any starter files, and each arm's first-run reply and written files under a shuffled letter, scores correctness, fit and reply, then ranks. The judge is the same model family that wrote the outputs, and it is one judge, not a panel; treat small gaps as noise.
+- The quality judge is one Opus call per task per pass, with no tools. It sees the request, any starter files, and each arm's first-run reply and written files under a shuffled letter, scores correctness, fit and reply, then ranks. The judge is the same model family that wrote the outputs, so a second judge, Gemini 4 Neon (High) through the Antigravity CLI, was given the same prompts; its verdicts and the agreement between the two are in [`bench/results/2026-11-26-agy-judge-v0.7`](bench/results/2026-11-26-agy-judge-v0.7/agreement.md). Two judges are still not a panel; treat small gaps as noise.
 - Not measured: long multi-turn sessions, tasks that run shell commands, models other than Opus, and Caveman (its rules cover prose only, not how much code to write).
 - Full report with per-task numbers and every reply: [`bench/results/2026-11-19-opus-v0.7`](bench/results/2026-11-19-opus-v0.7/report.md), judge verdicts with reasons in [`judge.jsonl`](bench/results/2026-11-19-opus-v0.7/judge.jsonl). To re-run it, clone the two plugins into a sibling `token-savers/` directory and run:
 
