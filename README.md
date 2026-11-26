@@ -316,6 +316,14 @@ Frugal stats · this session
 
 State and the log live in `~/.claude/frugal/` and are left in place if you uninstall.
 
+### `/frugal:compress`
+
+```text
+/frugal:compress CLAUDE.md
+```
+
+Rewrites a memory file (a `CLAUDE.md`, a handoff, notes) in fewer words. The original is copied to `<file>.bak` first, and an existing backup is never overwritten without asking. Only prose changes: code, commands, paths, tables' values, frontmatter and every fact and instruction are kept as they are. It runs only when you type it, so it adds nothing to context otherwise. The rewrite is done by the model and costs a turn; read the diff before deleting the backup.
+
 ## Orchestration
 
 ```text

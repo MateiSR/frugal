@@ -29,6 +29,7 @@ This file lives at `.claude/CLAUDE.md` on purpose: a `CLAUDE.md` at the plugin r
 - `hooks/frugal.js` — all three hooks, the `/frugal` command and stats.
 - `skills/frugal/SKILL.md` — fallback for `/frugal` if the hook did not run.
 - `skills/orchestrate/SKILL.md` — the orchestrator's instructions.
+- `skills/compress/SKILL.md` — `/frugal:compress`, rewrites a memory file tersely after backing it up; user-invoked only.
 - `skills/debug/SKILL.md` — root-cause method for a bug that survived two fixes.
 - `agents/*.md` — `stream-worker`, `researcher`, `visual-verifier`, `reviewer`.
 - `bench/` — on-versus-off benchmark: `tasks.js`, `conversations.js` (multi-turn tier), `run.js`, `report.js`, `judge.js` (blind quality review), `agree.js` (inter-judge agreement), `draw.js` (README images), `variants/`, committed `results/<stamp>/`.

@@ -51,7 +51,7 @@ claude --plugin-dir /path/to/frugal --model haiku --debug-file /tmp/frugal-debug
 grep -i 'plugin frugal\|hook' /tmp/frugal-debug.log | head
 ```
 
-Expect `Loaded 4 agents`, `Loaded 3 skills` and the hooks registering.
+Expect `Loaded 4 agents`, `Loaded 4 skills` and the hooks registering.
 
 The orchestration flow has no automated test. To exercise it, run `/frugal:orchestrate` on a small throwaway repo with `stops=each`.
 
